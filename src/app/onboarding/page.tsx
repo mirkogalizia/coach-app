@@ -16,7 +16,7 @@ export default function OnboardingPage() {
       <p className="text-sm text-muted-foreground">
         Qui chiederemo sesso, età, altezza, peso, obiettivi e preferenze per costruire la tua dieta.
       </p>
-      <Button onClick={() => router.push("/")}>Fine (torna alla Home)</Button>
+      <Button onClick={() => router.push("/dashboard")}>Fine (torna alla Home)</Button>
     </div>
   );
 }
