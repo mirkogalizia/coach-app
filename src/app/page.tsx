@@ -10,17 +10,15 @@ import { SimpleMacros } from "@/components/SimpleMacros";
 import { WeeklyDots } from "@/components/WeeklyDots";
 
 export default function HomePage() {
-  // dati mock rapidi
   const [macros] = useState({ kcal: 1240, target: 2100, p: 92, c: 28, f: 76 });
   const streakDays = 3;
 
   return (
-    // altezza fissa: occupa l’intero viewport meno la dock (~110px)
-    <div className="mx-auto max-w-md px-3 pt-3 h-[calc(100dvh-110px)] overflow-hidden">
-      {/* Layout a griglia: 4 righe, spazi ottimizzati, niente scroll */}
+    <div className="mx-auto max-w-md px-3 pt-3 no-scroll-screen">
+      {/* 4 righe compatte; l’ultima cresce ma senza overscroll */}
       <div className="grid h-full grid-rows-[auto_auto_auto_1fr] gap-2">
 
-        {/* 1) Header compatto */}
+        {/* Header compatto */}
         <div className="flex items-center justify-between">
           <div className="text-base font-semibold">Ciao 👋</div>
           <Badge variant="secondary" className="bg-[#FFD580] text-[#1A1A1A]">
@@ -28,7 +26,7 @@ export default function HomePage() {
           </Badge>
         </div>
 
-        {/* 2) Macro semplici (card vetro compatta) */}
+        {/* Macro card compattata */}
         <div className="shrink-0">
           <SimpleMacros
             kcal={macros.kcal}
@@ -39,7 +37,7 @@ export default function HomePage() {
           />
         </div>
 
-        {/* 3) Piano di oggi + CTA piccola */}
+        {/* Piano di oggi + CTA piccola */}
         <GlassCard className="shrink-0">
           <CardHeader className="py-2 flex items-center justify-between">
             <CardTitle className="text-base">Piano di oggi</CardTitle>
@@ -60,8 +58,8 @@ export default function HomePage() {
           </CardFooter>
         </GlassCard>
 
-        {/* 4) Weekly dots (occupazione elastica in basso) */}
-        <div className="min-h-0 overflow-hidden">
+        {/* Weekly dots: riga elastica, ma senza scroll e con densità ridotta */}
+        <div className="min-h-0">
           <WeeklyDots />
         </div>
       </div>

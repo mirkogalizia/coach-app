@@ -105,3 +105,23 @@ body::before {
     grid-template-columns: repeat(15, minmax(0, 1fr));
   }
 }
+/* ==== Mobile UX / Viewport iOS ==== */
+html, body { height: 100%; }
+body {
+  min-height: 100svh;            /* viewport reale su mobile */
+  overscroll-behavior: none;      /* no bounce */
+  -webkit-overflow-scrolling: auto;
+  touch-action: manipulation;
+}
+
+/* Safe area e dock */
+:root {
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --dock-h: calc(64px + var(--safe-b));   /* altezza dock = 64 + safe bottom */
+}
+
+/* Contenitore pagina senza scroll (rispetta dock) */
+.no-scroll-screen {
+  height: calc(100svh - var(--dock-h));
+  overflow: hidden;               /* niente scroll */
+}

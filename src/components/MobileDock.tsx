@@ -17,9 +17,10 @@ export function MobileDock() {
 
   return (
     <>
-      <div className="fixed z-50 w-full max-w-md -translate-x-1/2 left-1/2 bottom-4 px-3">
-  <div className="relative h-16 w-full ios-rounded glass ios-shadow">
-          <div className="grid h-full grid-cols-5">
+      <div className="fixed z-50 w-full max-w-md left-1/2 -translate-x-1/2 bottom-0 px-3"
+     style={{ paddingBottom: 'var(--safe-b)' }}>
+  <div className="relative w-full h-[calc(64px+var(--safe-b))] ios-rounded glass ios-shadow border border-white/20">
+    <div className="grid h-[64px] grid-cols-5">
             {TABS.slice(0, 2).map((item) => (
               <DockButton key={item.href} {...item} active={pathname === item.href} />
             ))}
