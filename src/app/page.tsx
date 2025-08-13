@@ -1,68 +1,50 @@
-// app/page.tsx
 "use client";
-
-import { useState } from "react";
-import { GlassCard } from "@/components/GlassCard";
-import { CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SimpleMacros } from "@/components/SimpleMacros";
-import { WeeklyDots } from "@/components/WeeklyDots";
 
 export default function HomePage() {
-  const [macros] = useState({ kcal: 1240, target: 2100, p: 92, c: 28, f: 76 });
-  const streakDays = 3;
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-  return (
-    <div className="mx-auto max-w-md px-3 pt-3 no-scroll-screen">
-      {/* 4 righe compatte; l’ultima cresce ma senza overscroll */}
-      <div className="grid h-full grid-rows-[auto_auto_auto_1fr] gap-2">
-
-        {/* Header compatto */}
-        <div className="flex items-center justify-between">
-          <div className="text-base font-semibold">Ciao 👋</div>
-          <Badge variant="secondary" className="bg-[#FFD580] text-[#1A1A1A]">
-            Streak: {streakDays} giorni
-          </Badge>
-        </div>
-
-        {/* Macro card compattata */}
-        <div className="shrink-0">
-          <SimpleMacros
-            kcal={macros.kcal}
-            target={macros.target}
-            p={macros.p}
-            c={macros.c}
-            f={macros.f}
-          />
-        </div>
-
-        {/* Piano di oggi + CTA piccola */}
-        <GlassCard className="shrink-0">
-          <CardHeader className="py-2 flex items-center justify-between">
-            <CardTitle className="text-base">Piano di oggi</CardTitle>
-            <Badge variant="outline" className="text-xs">Pranzo + Cena</Badge>
-          </CardHeader>
-          <CardContent className="py-2 text-sm space-y-1">
-            <div className="flex justify-between">
-              <span>Pranzo</span><span className="text-muted-foreground">Manzo + verdure + EVO</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Cena</span><span className="text-muted-foreground">Salmone + insalata + uova</span>
-            </div>
+  if (loading) return <div className="text-sm text-muted-foreground">Caricamento…</div>;
+  if (user) {
+    // Qui mostri la tua home “vera” (coach, macros, ecc.)
+    return (
+      <div className="space-y-3">
+        <h1 className="text-xl font-semibold">Bentornato, {user.email}</h1>
+        <Card>
+          <CardHeader className="pb-2 font-medium">Piano di oggi</CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Apri la sezione Dieta per vedere i pasti.
           </CardContent>
-          <CardFooter className="pt-1">
-            <Button className="btn-gradient ios-rounded w-full h-9 text-sm">
-              Chiedi una modifica al coach
-            </Button>
+          <CardFooter>
+            <Button onClick={() => router.push("/diet")} className="w-full">Vai a Dieta</Button>
           </CardFooter>
-        </GlassCard>
-
-        {/* Weekly dots: riga elastica, ma senza scroll e con densità ridotta */}
-        <div className="min-h-0">
-          <WeeklyDots />
-        </div>
+        </Card>
       </div>
-    </div>
+    );
+  }
+
+  // Landing login/registrazione
+  return (
+    <Card className="rounded-2xl">
+      <CardHeader>
+        <h1 className="text-xl font-bold">Coach</h1>
+        <p className="text-sm text-muted-foreground">
+          La tua dieta e il tuo workout, su misura.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <Button asChild className="w-full">
+          <Link href="/sign-in">Accedi</Link>
+        </Button>
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/sign-up">Registrati</Link>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
