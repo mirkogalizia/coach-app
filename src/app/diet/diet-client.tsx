@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
 import { MealCard } from "@/components/meal-card"; // ✅ Named export
-import ChatDock from "@/components/chat-dock"; // ✅ Default export
-
+import { ChatDock } from "@/components/chat-dock"; // ✅ CORRETTO
 import {
   Dialog,
   DialogContent,
