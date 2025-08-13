@@ -1,10 +1,6 @@
-// app/dashboard/page.tsx
-import dynamic from "next/dynamic";
+"use client";
 
-// Import dinamico per evitare SSR del client component
-const DashboardClient = dynamic(() => import("./dashboard-client"), { ssr: false });
-
-export const dynamic = "force-dynamic";
+import DashboardClient from "./dashboard-client";
 
 export default function DashboardPage() {
   return <DashboardClient />;

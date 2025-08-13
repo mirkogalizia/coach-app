@@ -1,15 +1,27 @@
-// app/page.tsx
+// app/dashboard/dashboard-client.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { GlassCard } from "@/components/GlassCard";
 import { CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SimpleMacros } from "@/components/SimpleMacros";
 import { WeeklyDots } from "@/components/WeeklyDots";
+import { useAuth } from "@/components/AuthProvider";
 
-export default function HomePage() {
+export default function DashboardClient() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) router.replace("/sign-in");
+  }, [loading, user, router]);
+
+  if (loading) return <div className="text-sm text-muted-foreground">Caricamento…</div>;
+  if (!user) return null;
+
   const [macros] = useState({ kcal: 1240, target: 2100, p: 92, c: 28, f: 76 });
   const streakDays = 3;
 
@@ -17,7 +29,6 @@ export default function HomePage() {
     <div className="mx-auto max-w-md px-3 pt-3 no-scroll-screen">
       {/* 4 righe compatte; l’ultima cresce ma senza overscroll */}
       <div className="grid h-full grid-rows-[auto_auto_auto_1fr] gap-2">
-
         {/* Header compatto */}
         <div className="flex items-center justify-between">
           <div className="text-base font-semibold">Ciao 👋</div>

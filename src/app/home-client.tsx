@@ -1,50 +1,47 @@
+// app/home-client.tsx
 "use client";
-import Link from "next/link";
+
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export default function HomePage() {
+export default function HomeClient() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  if (loading) return <div className="text-sm text-muted-foreground">Caricamento…</div>;
-  if (user) {
-    // Qui mostri la tua home “vera” (coach, macros, ecc.)
-    return (
-      <div className="space-y-3">
-        <h1 className="text-xl font-semibold">Bentornato, {user.email}</h1>
-        <Card>
-          <CardHeader className="pb-2 font-medium">Piano di oggi</CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Apri la sezione Dieta per vedere i pasti.
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => router.push("/diet")} className="w-full">Vai a Dieta</Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
+  // se già loggato → vai in dashboard
+  useEffect(() => {
+    if (!loading && user) router.replace("/dashboard");
+  }, [loading, user, router]);
 
-  // Landing login/registrazione
   return (
-    <Card className="rounded-2xl">
-      <CardHeader>
-        <h1 className="text-xl font-bold">Coach</h1>
-        <p className="text-sm text-muted-foreground">
-          La tua dieta e il tuo workout, su misura.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <Button asChild className="w-full">
-          <Link href="/sign-in">Accedi</Link>
-        </Button>
-        <Button asChild variant="outline" className="w-full">
-          <Link href="/sign-up">Registrati</Link>
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="min-h-[100dvh] grid place-items-center px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="text-2xl font-semibold">Coach</div>
+          <div className="text-sm text-muted-foreground">
+            La tua dieta e workout, ottimizzati giorno per giorno.
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Dashboard mobile-first</li>
+            <li>Dieta personalizzata</li>
+            <li>Modifiche “chiedi al coach”</li>
+          </ul>
+        </CardContent>
+        <CardFooter className="flex gap-2">
+          <Link href="/sign-in" className="flex-1">
+            <Button className="w-full" variant="secondary">Accedi</Button>
+          </Link>
+          <Link href="/sign-up" className="flex-1">
+            <Button className="w-full">Registrati</Button>
+          </Link>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

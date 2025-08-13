@@ -1,30 +1,49 @@
+// app/diet/diet-client.tsx
 "use client";
-import { useState } from "react";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MealCard } from "@/components/meal-card";
 import { ChatDock } from "@/components/chat-dock";
+import { useState } from "react";
 
-export default function DietPage(){
+type PreviewMealItem = { label: string; grams: number; kcal: number; p: number; c: number; f: number; };
+type PreviewMeal = { name: string; items: PreviewMealItem[] };
+type PreviewPayload = { meals: PreviewMeal[]; totals: { kcal: number; p: number; c: number; f: number } };
+
+export default function DietClient() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) router.replace("/sign-in");
+  }, [loading, user, router]);
+
+  if (loading) return <div className="text-sm text-muted-foreground">Caricamento…</div>;
+  if (!user) return null;
+
   const [open, setOpen] = useState(false);
-  const [preview, setPreview] = useState<any>(null);
+  const [preview, setPreview] = useState<PreviewPayload | null>(null);
 
-  async function handleAI(message:string){
-    // TODO: chiamata reale a /api/ai/adjust
-    const mock = {
-      meals:[
-        { name:"Pranzo", items:[
-          { label:"Tortellini", grams:180, kcal:450, p:16, c:75, f:8 },
-          { label:"Petto di pollo", grams:160, kcal:260, p:38, c:0, f:6 },
+  async function handleAI(_message: string) {
+    // MOCK: sostituisci con chiamata alla tua API quando pronta
+    const mock: PreviewPayload = {
+      meals: [
+        { name: "Pranzo", items: [
+          { label: "Pollo", grams: 200, kcal: 330, p: 60, c: 0, f: 7 },
+          { label: "Insalata + EVO", grams: 150, kcal: 120, p: 2, c: 3, f: 10 },
         ]},
-        { name:"Cena", items:[
-          { label:"Salmone", grams:200, kcal:430, p:40, c:0, f:28 },
-          { label:"Insalata + EVO", grams:150, kcal:120, p:2, c:3, f:10 },
-        ]}
+        { name: "Cena", items: [
+          { label: "Salmone", grams: 200, kcal: 420, p: 40, c: 0, f: 28 },
+        ]},
       ],
-      totals:{ kcal: 2080, p: 185, c: 95, f: 85 }
+      totals: { kcal: 870, p: 102, c: 3, f: 45 },
     };
-    setPreview(mock); setOpen(true);
+    setPreview(mock);
+    setOpen(true);
   }
 
   return (
@@ -33,26 +52,26 @@ export default function DietPage(){
         {label:"Manzo magro", grams:300, macro:"P60 C0 F30"},
         {label:"Parmigiano", grams:30, macro:"P11 C0 F9"},
         {label:"Zucchine + EVO", grams:150, macro:"P3 C5 F12"},
-      ]} />
+      ]}/>
       <MealCard title="Cena" kcal={900} items={[
         {label:"Salmone", grams:180, macro:"P35 C0 F20"},
         {label:"Uova + mayo", grams:2, macro:"P12 C0 F15"},
         {label:"Insalata + EVO", grams:150, macro:"P2 C3 F10"},
-      ]} />
-      <Button className="w-full" variant="secondary" onClick={()=>handleAI("Ottimizza giornata")}>
-        Ottimizza con AI
+      ]}/>
+      <Button className="w-full" variant="secondary" onClick={() => handleAI("Ottimizza giornata")}>
+        Chiedi una modifica al coach
       </Button>
 
       <ChatDock context="diet" onSend={handleAI} />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Proposta AI – Dieta di oggi</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Proposta – Dieta di oggi</DialogTitle></DialogHeader>
           <div className="space-y-2 text-sm max-h-[50vh] overflow-auto">
-            {preview?.meals?.map((m:any, i:number)=> (
+            {preview?.meals.map((m, i) => (
               <div key={i}>
                 <div className="font-medium">{m.name}</div>
-                {m.items.map((it:any, k:number)=> (
+                {m.items.map((it, k) => (
                   <div key={k} className="flex justify-between">
                     <span>{it.label} • {it.grams}g</span>
                     <span>{Math.round(it.kcal)} kcal • P{it.p} C{it.c} F{it.f}</span>
@@ -60,10 +79,14 @@ export default function DietPage(){
                 ))}
               </div>
             ))}
-            <div className="text-xs text-muted-foreground">Totali: ~{preview?.totals?.kcal} kcal • P{preview?.totals?.p} C{preview?.totals?.c} F{preview?.totals?.f}</div>
+            {preview && (
+              <div className="text-xs text-muted-foreground">
+                Totali: ~{preview.totals.kcal} kcal • P{preview.totals.p} C{preview.totals.c} F{preview.totals.f}
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={()=>setOpen(false)}>Annulla</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>Annulla</Button>
             <Button>Applica</Button>
           </DialogFooter>
         </DialogContent>

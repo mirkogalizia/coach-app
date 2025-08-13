@@ -1,41 +1,13 @@
+// src/app/workout/workout-client.tsx
 "use client";
 
-import { useAuth } from "@/components/AuthProvider";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-
 export default function WorkoutClient() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) router.replace("/sign-in");
-  }, [loading, user, router]);
-
-  if (loading) return <div className="text-sm text-muted-foreground">Caricamento…</div>;
-  if (!user) return null;
-
   return (
-    <div className="space-y-3 pb-28">
-      <Card>
-        <CardHeader className="pb-2 flex items-center justify-between">
-          <div className="font-semibold">Petto + Spalle</div>
-          <Badge variant="outline">Settimana 2/4</Badge>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <div className="flex justify-between"><span>Spinte manubri piana</span><span>4×8–10</span></div>
-          <div className="flex justify-between"><span>Croci ai cavi</span><span>3×12–15</span></div>
-          <Separator />
-          <div className="flex justify-between"><span>Military press manubri</span><span>4×8–10</span></div>
-        </CardContent>
-        <CardFooter className="justify-end">
-          <Button size="sm" variant="secondary">Sostituisci con il coach</Button>
-        </CardFooter>
-      </Card>
+    <div className="p-6">
+      <div className="text-xl font-semibold">Workout</div>
+      <p className="text-sm text-muted-foreground">
+        Pagina client OK. Reintrodurremo i componenti uno alla volta.
+      </p>
     </div>
   );
 }

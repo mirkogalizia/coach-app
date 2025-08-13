@@ -1,4 +1,8 @@
-import dynamic from "next/dynamic";
-const DietClient = dynamic(() => import("./diet-client"), { ssr: false });
-export const dynamic = "force-dynamic";
-export default function DietPage(){ return <DietClient/>; }
+// src/app/diet/page.tsx
+"use client";
+
+import DietClient from "./diet-client";
+
+export default function DietPage() {
+  return <DietClient />;
+}

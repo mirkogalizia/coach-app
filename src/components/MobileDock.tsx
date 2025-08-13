@@ -1,78 +1,32 @@
+// components/MobileDock.tsx
 "use client";
-
+import { Home, Utensils, Dumbbell, MessageSquare } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Utensils, Dumbbell, MessageSquare, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-const TABS = [
-  { href: "/", label: "Home", icon: Home, rounded: "start" as const },
-  { href: "/diet", label: "Dieta", icon: Utensils },
-  { href: "/workout", label: "Workout", icon: Dumbbell },
-  { href: "/chat", label: "Chat", icon: MessageSquare, rounded: "end" as const },
-];
-
-export function MobileDock() {
-  const pathname = usePathname();
-
+function MobileDockImpl() {
+  const TABS = [
+    { href: "/dashboard", label: "Home", icon: Home },
+    { href: "/diet", label: "Dieta", icon: Utensils },
+    { href: "/workout", label: "Workout", icon: Dumbbell },
+    { href: "/chat", label: "Coach", icon: MessageSquare },
+  ];
   return (
-    <>
-      <div className="fixed z-50 w-full max-w-md left-1/2 -translate-x-1/2 bottom-0 px-3"
-     style={{ paddingBottom: 'var(--safe-b)' }}>
-  <div className="relative w-full h-[calc(64px+var(--safe-b))] ios-rounded glass ios-shadow border border-white/20">
-    <div className="grid h-[64px] grid-cols-5">
-            {TABS.slice(0, 2).map((item) => (
-              <DockButton key={item.href} {...item} active={pathname === item.href} />
-            ))}
-
-            {/* FAB centrale */}
-            <div className="flex items-center justify-center">
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("dock:fad"))}
-                className={cn(
-                  "inline-flex items-center justify-center w-10 h-10 rounded-full",
-                  "bg-primary text-primary-foreground ring-offset-background",
-                  "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2",
-                  "active:scale-95 transition"
-                )}
-                aria-label="Nuovo elemento"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-
-            {TABS.slice(2).map((item) => (
-              <DockButton key={item.href} {...item} active={pathname === item.href} />
-            ))}
-          </div>
-        </div>
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-background/80 backdrop-blur border-t pb-[calc(env(safe-area-inset-bottom))]">
+      <div className="grid grid-cols-4 gap-1 p-2 max-w-md mx-auto">
+        {TABS.map(({ href, label, icon: Icon }) => (
+          <Link key={href} href={href} className="flex">
+            <Button variant="ghost" className="w-full h-12 flex-col text-xs">
+              <Icon className="h-5 w-5" />
+              {label}
+            </Button>
+          </Link>
+        ))}
       </div>
-
-      {/* Safe area iOS */}
-      <div className="h-[calc(env(safe-area-inset-bottom))]" />
-    </>
+    </nav>
   );
 }
 
-function DockButton({
-  href, label, icon: Icon, active, rounded,
-}: {
-  href: string; label: string; icon: any; active?: boolean; rounded?: "start"|"end";
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "inline-flex flex-col items-center justify-center px-5 select-none",
-        rounded === "start" && "rounded-s-full",
-        rounded === "end" && "rounded-e-full",
-        "hover:bg-accent/50 focus:bg-accent/60 focus:outline-none"
-      )}
-      aria-label={label}
-    >
-      <Icon className={cn("w-5 h-5 mb-1", active ? "text-primary" : "text-muted-foreground")} />
-      <span className="sr-only">{label}</span>
-    </Link>
-  );
+export default function MobileDock() {
+  return <MobileDockImpl />;
 }
