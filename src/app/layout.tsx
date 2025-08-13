@@ -1,7 +1,7 @@
 // src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { AuthProvider } from "@/components/AuthProvider"; // 👈 IMPORTANTE
+import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
   title: "Coach",
@@ -14,11 +14,9 @@ export const revalidate = 0;
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <body className="min-h-[100dvh] bg-background text-foreground">
-        <AuthProvider> {/* 👈 WRAP TUTTO */}
-          <div className="max-w-md mx-auto px-3 pt-3 pb-[120px]">
-            {children}
-          </div>
+      <body className="min-h-[100dvh] bg-background text-foreground relative">
+        <AuthProvider>
+          {children}
         </AuthProvider>
       </body>
     </html>
