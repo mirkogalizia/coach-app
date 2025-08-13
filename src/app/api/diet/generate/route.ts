@@ -1,10 +1,56 @@
+// src/app/api/diet/generate/route.ts
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextResponse } from "next/server";
 
-/** ——— Helpers semplici ——— */
+/* ================== Types ================== */
+type Nutriments = {
+  ["energy-kcal_100g"]?: number;
+  ["energy_100g"]?: number; // kJ
+  proteins_100g?: number;
+  carbohydrates_100g?: number;
+  fat_100g?: number;
+  salt_100g?: number;
+};
+
+type OFFProduct = {
+  code?: string;
+  product_name?: string;
+  product_name_it?: string;
+  image_url?: string;
+  categories_tags?: string[];
+  nutriments?: Nutriments;
+  nova_group?: number;
+};
+
+type OFFSearchResponse = {
+  products?: OFFProduct[];
+};
+
+type Item = {
+  code: string;
+  name: string;
+  image: string | null;
+  per100: { kcal: number; p: number; c: number; f: number };
+};
+
+type MealItem = Item & { grams: number };
+
+type Meal = {
+  name: string;
+  items: MealItem[];
+  macros: { kcal: number; p: number; c: number; f: number };
+};
+
+type DayPlan = {
+  date: string; // YYYY-MM-DD
+  meals: Meal[];
+  totals: { kcal: number; p: number; c: number; f: number };
+};
+
+/* ================== Utils ================== */
 function abortableFetch(url: string, init: RequestInit = {}, ms = 8000) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
@@ -12,40 +58,48 @@ function abortableFetch(url: string, init: RequestInit = {}, ms = 8000) {
     .finally(() => clearTimeout(id));
 }
 
-// kcal/100g: prova prima energy-kcal_100g, altrimenti converti da kJ
-function kcalFrom(n: any): number | null {
+function kcalFrom(n?: Nutriments): number | null {
   if (!n) return null;
-  if (typeof n["energy-kcal_100g"] === "number") return Math.round(n["energy-kcal_100g"]);
-  if (typeof n["energy_100g"] === "number") return Math.round(n["energy_100g"] * 0.23900573614);
+  if (typeof n["energy-kcal_100g"] === "number") return Math.round(n["energy-kcal_100g"]!);
+  if (typeof n["energy_100g"] === "number") return Math.round(n["energy_100g"]! * 0.23900573614);
   return null;
 }
 
-// Normalizza un prodotto OFF in un “item” utilizzabile
-function toItem(p: any) {
-  const n = p?.nutriments ?? {};
-  const kcal = kcalFrom(n);
-  const p100 = typeof n.proteins_100g === "number" ? n.proteins_100g : null;
-  const c100 = typeof n.carbohydrates_100g === "number" ? n.carbohydrates_100g : null;
-  const f100 = typeof n.fat_100g === "number" ? n.fat_100g : null;
-  if (kcal == null || p100 == null || c100 == null || f100 == null) return null;
+function nz(x: number | undefined | null): number {
+  return typeof x === "number" && Number.isFinite(x) ? x : 0;
+}
+
+function toItem(p: OFFProduct): Item | null {
+  const kcal = kcalFrom(p.nutriments);
+  if (kcal == null) return null; // senza kcal non ha senso
+  const name = p.product_name_it || p.product_name || "Prodotto";
   return {
     code: String(p.code ?? ""),
-    name: p.product_name_it || p.product_name || "Prodotto",
-    image: p.image_url || null,
-    per100: { kcal, p: p100, c: c100, f: f100 },
+    name,
+    image: p.image_url ?? null,
+    per100: {
+      kcal,
+      p: nz(p.nutriments?.proteins_100g),
+      c: nz(p.nutriments?.carbohydrates_100g),
+      f: nz(p.nutriments?.fat_100g),
+    },
   };
 }
 
-// Somma macro di un array di item con grammi
-function sumMeal(items: Array<any>) {
+function withGrams(base: Item, grams: number): MealItem {
+  return { ...base, grams };
+}
+
+function sumMeal(items: MealItem[]): Meal["macros"] {
   const acc = items.reduce(
     (t, it) => {
       const f = it.grams / 100;
-      t.kcal += it.per100.kcal * f;
-      t.p    += it.per100.p    * f;
-      t.c    += it.per100.c    * f;
-      t.f    += it.per100.f    * f;
-      return t;
+      return {
+        kcal: t.kcal + it.per100.kcal * f,
+        p: t.p + it.per100.p * f,
+        c: t.c + it.per100.c * f,
+        f: t.f + it.per100.f * f,
+      };
     },
     { kcal: 0, p: 0, c: 0, f: 0 }
   );
@@ -57,122 +111,156 @@ function sumMeal(items: Array<any>) {
   };
 }
 
-// Prende il primo prodotto “pulito” da una categoria OFF v2
-async function offPickFirst(categoryEn: string) {
-  const url = new URL("https://world.openfoodfacts.org/api/v2/search");
-  url.searchParams.set("categories_tags_en", categoryEn);
-  url.searchParams.set("fields", "code,product_name,product_name_it,image_url,nutriments,categories_tags,nova_group");
-  url.searchParams.set("sort_by", "unique_scans_n");
-  url.searchParams.set("page_size", "10");
+/* ================== OFF picker robusto ================== */
+async function offPickFirst(categoryEnOrList: string | string[]): Promise<Item | null> {
+  const categories = Array.isArray(categoryEnOrList)
+    ? categoryEnOrList
+    : [categoryEnOrList];
 
-  const r = await abortableFetch(url.toString(), {
-    headers: { "User-Agent": process.env.OFF_USER_AGENT || "coach-app/1.0" },
-  }, 8000);
+  // fallback pollo sensati se la prima categoria non rende
+  const tryCategories = [
+    ...categories,
+    "chicken-breasts",
+    "chickens",
+    "cooked-chicken",
+    "cooked-chicken-breast",
+    "poultries",
+  ];
 
-  if (!r.ok) {
-    // log interno; non bloccare
-    const txt = await r.text().catch(() => "");
-    console.error("OFF v2 failed", r.status, txt.slice(0, 200));
-    return null;
+  async function queryOnce(cat: string): Promise<Item | null> {
+    const url = new URL("https://world.openfoodfacts.org/api/v2/search");
+    url.searchParams.set("categories_tags_en", cat);
+    url.searchParams.set(
+      "fields",
+      "code,product_name,product_name_it,image_url,nutriments,categories_tags,nova_group"
+    );
+    url.searchParams.set("sort_by", "unique_scans_n");
+    url.searchParams.set("page_size", "20");
+
+    const r = await abortableFetch(
+      url.toString(),
+      { headers: { "User-Agent": process.env.OFF_USER_AGENT || "coach-app/1.0" } },
+      8000
+    );
+    if (!r.ok) return null;
+
+    const data = (await r.json()) as OFFSearchResponse;
+    const list = Array.isArray(data.products) ? data.products : [];
+
+    // filtri permissivi per aumentare i match
+    const cleaned = list
+      .filter((p) => (p.nova_group ?? 3) <= 3)
+      .filter((p) => (p.nutriments?.salt_100g ?? 0) <= 3)
+      .map(toItem)
+      .filter((it): it is Item => it !== null);
+
+    // preferisci i più proteici
+    cleaned.sort((a, b) => b.per100.p - a.per100.p);
+
+    return cleaned[0] ?? null;
   }
 
-  const data = await r.json();
-  const list = Array.isArray(data?.products) ? data.products : [];
-
-  // filtri minimi: poco processati e sale non alto
-  const cleaned = list
-    .filter((p: any) => (p?.nova_group ?? 2) <= 2)
-    .filter((p: any) => (p?.nutriments?.salt_100g ?? 0) <= 2)
-    .map(toItem)
-    .filter(Boolean);
-
-  return cleaned[0] ?? null;
+  for (const cat of tryCategories) {
+    try {
+      const item = await queryOnce(cat);
+      if (item) return item;
+    } catch {
+      // ignora e prova la successiva
+    }
+  }
+  return null;
 }
 
-/** ——— GET: mostra come usare la POST ——— */
+/* ================== Route ================== */
 export async function GET() {
   return NextResponse.json({
     use: "POST /api/diet/generate",
-    example: { days: 1, lunchGrams: 200, dinnerGrams: 200 }
+    example: { days: 1, lunchGrams: 200, dinnerGrams: 200, lunchCategory: "chicken-meat", dinnerCategory: "salmon" },
   });
 }
 
-/** ——— POST: genera 1..7 giorni con Pranzo (pollo) + Cena (salmone) ——— */
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => ({}));
-    const days = typeof body.days === "number" && body.days > 0 ? Math.min(body.days, 7) : 1;
-    const lunchGrams  = typeof body.lunchGrams  === "number" ? body.lunchGrams  : 200;
-    const dinnerGrams = typeof body.dinnerGrams === "number" ? body.dinnerGrams : 200;
+    const body = await req.json().catch(() => ({} as Record<string, unknown>));
 
-    // MOCK rapido (opzionale): se serve sbloccare subito
+    const daysRaw = (body as { days?: number }).days;
+    const lunchGramsRaw = (body as { lunchGrams?: number }).lunchGrams;
+    const dinnerGramsRaw = (body as { dinnerGrams?: number }).dinnerGrams;
+    const lunchCategoryRaw = (body as { lunchCategory?: string | string[] }).lunchCategory;
+    const dinnerCategoryRaw = (body as { dinnerCategory?: string | string[] }).dinnerCategory;
+
+    const days = typeof daysRaw === "number" && daysRaw > 0 ? Math.min(daysRaw, 7) : 1;
+    const lunchGrams = typeof lunchGramsRaw === "number" ? lunchGramsRaw : 200;
+    const dinnerGrams = typeof dinnerGramsRaw === "number" ? dinnerGramsRaw : 200;
+
+    const lunchCategory = lunchCategoryRaw ?? "chicken-meat";
+    const dinnerCategory = dinnerCategoryRaw ?? "salmon";
+
+    // Mock rapido per sbloccare test se serve
     if (process.env.DEBUG_DIET_MOCK === "1") {
-      const mkDay = (i: number) => {
+      const mk = (i: number): DayPlan => {
         const d = new Date(); d.setDate(d.getDate() + i);
         const date = d.toISOString().slice(0, 10);
-        const chicken = { code: "mock1", name: "Petto di pollo", per100: { kcal: 165, p: 31, c: 0, f: 3.6 } };
-        const salmon  = { code: "mock2", name: "Salmone",       per100: { kcal: 208, p: 20, c: 0, f: 13  } };
-        const lunchItems  = [{ ...chicken, grams: lunchGrams  }];
-        const dinnerItems = [{ ...salmon,  grams: dinnerGrams }];
-        const lunch  = { name: "Pranzo", items: lunchItems,  macros: sumMeal(lunchItems) };
-        const dinner = { name: "Cena",   items: dinnerItems, macros: sumMeal(dinnerItems) };
+        const chicken: Item = { code: "mock1", name: "Petto di pollo", image: null, per100: { kcal: 165, p: 31, c: 0, f: 3.6 } };
+        const salmon:  Item = { code: "mock2", name: "Salmone",        image: null, per100: { kcal: 208, p: 20, c: 0, f: 13 } };
+        const lunchItems = [withGrams(chicken, lunchGrams)];
+        const dinnerItems = [withGrams(salmon, dinnerGrams)];
+        const lunch: Meal = { name: "Pranzo", items: lunchItems, macros: sumMeal(lunchItems) };
+        const dinner: Meal = { name: "Cena",   items: dinnerItems, macros: sumMeal(dinnerItems) };
         return {
           date,
           meals: [lunch, dinner],
           totals: {
             kcal: lunch.macros.kcal + dinner.macros.kcal,
-            p:    lunch.macros.p    + dinner.macros.p,
-            c:    lunch.macros.c    + dinner.macros.c,
-            f:    lunch.macros.f    + dinner.macros.f,
-          }
+            p: lunch.macros.p + dinner.macros.p,
+            c: lunch.macros.c + dinner.macros.c,
+            f: lunch.macros.f + dinner.macros.f,
+          },
         };
       };
-      return NextResponse.json({ ok: true, days, week: Array.from({ length: days }, (_, i) => mkDay(i)) });
+      return NextResponse.json({ ok: true, days, week: Array.from({ length: days }, (_, i) => mk(i)) });
     }
 
-    // LIVE: chiama OFF v2
-    const [chicken, salmon] = await Promise.all([
-      offPickFirst("chicken-meat"),
-      offPickFirst("salmon"),
+    // LIVE: prendi i prodotti da OFF
+    const [lunchItem, dinnerItem] = await Promise.all([
+      offPickFirst(lunchCategory),
+      offPickFirst(dinnerCategory),
     ]);
 
-    if (!chicken || !salmon) {
+    if (!lunchItem || !dinnerItem) {
       return NextResponse.json(
-        { error: "no_products", detail: { chicken: !!chicken, salmon: !!salmon } },
+        { error: "no_products", detail: { lunch: !!lunchItem, dinner: !!dinnerItem } },
         { status: 502 }
       );
     }
 
-    const makeDay = (i: number) => {
-      const d = new Date(); d.setDate(d.getDate() + i);
+    const buildDay = (offset: number): DayPlan => {
+      const d = new Date(); d.setDate(d.getDate() + offset);
       const date = d.toISOString().slice(0, 10);
 
-      const lunchItems  = [{ ...chicken, grams: lunchGrams  }];
-      const dinnerItems = [{ ...salmon,  grams: dinnerGrams }];
+      const lunchItems = [withGrams(lunchItem, lunchGrams)];
+      const dinnerItems = [withGrams(dinnerItem, dinnerGrams)];
 
-      const lunch  = { name: "Pranzo", items: lunchItems,  macros: sumMeal(lunchItems) };
-      const dinner = { name: "Cena",   items: dinnerItems, macros: sumMeal(dinnerItems) };
+      const lunch: Meal = { name: "Pranzo", items: lunchItems, macros: sumMeal(lunchItems) };
+      const dinner: Meal = { name: "Cena", items: dinnerItems, macros: sumMeal(dinnerItems) };
 
       return {
         date,
         meals: [lunch, dinner],
         totals: {
           kcal: lunch.macros.kcal + dinner.macros.kcal,
-          p:    lunch.macros.p    + dinner.macros.p,
-          c:    lunch.macros.c    + dinner.macros.c,
-          f:    lunch.macros.f    + dinner.macros.f,
-        }
+          p: lunch.macros.p + dinner.macros.p,
+          c: lunch.macros.c + dinner.macros.c,
+          f: lunch.macros.f + dinner.macros.f,
+        },
       };
     };
 
-    const week = Array.from({ length: days }, (_, i) => makeDay(i));
+    const week = Array.from({ length: days }, (_, i) => buildDay(i));
     return NextResponse.json({ ok: true, days, week });
-  } catch (e: any) {
-    console.error("diet/generate exception:", e?.name, e?.message ?? String(e));
-    // in dev puoi far trapelare l’errore:
-    if (process.env.DEBUG_VERBOSE === "1") {
-      return NextResponse.json({ error: "internal_error", message: String(e) }, { status: 500 });
-    }
+  } catch (e) {
+    const message = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    console.error("diet/generate exception:", message);
     return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }
