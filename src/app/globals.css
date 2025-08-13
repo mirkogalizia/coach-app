@@ -125,3 +125,23 @@ body {
   height: calc(100svh - var(--dock-h));
   overflow: hidden;               /* niente scroll */
 }
+/* ==== Mobile: blocca scroll/bounce/pull-to-refresh ==== */
+html, body {
+  height: 100%;
+  overflow: hidden;              /* nessuno scroll globale */
+  overscroll-behavior: none;     /* no pull-to-refresh (Chrome/Android) */
+  -webkit-overflow-scrolling: auto;
+  touch-action: manipulation;    /* riduce gesti predefiniti */
+}
+
+/* Viewport reale e safe area */
+:root {
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --dock-h: calc(64px + var(--safe-b));
+}
+
+/* Contenitore schermata fissa sotto la dock */
+.no-scroll-screen {
+  height: calc(100svh - var(--dock-h));
+  overflow: hidden;
+}

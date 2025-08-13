@@ -1,17 +1,29 @@
+// app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { ClientRoot } from "@/components/ClientRoot";
+import { MobileDock } from "@/components/MobileDock";
+import { ViewportLock } from "@/components/ViewportLock";
 
 export const metadata: Metadata = {
   title: "Coach",
   description: "Diet & Workout AI",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    userScalable: false, // riduce zoom/pinch
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <body className="min-h-[100dvh] bg-background text-foreground">
-        <ClientRoot>{children}</ClientRoot>
+      <body className="bg-background text-foreground">
+        <ViewportLock />
+        <div className="mx-auto max-w-md px-3 pt-3 no-scroll-screen">
+          {children}
+        </div>
+        <MobileDock />
       </body>
     </html>
   );
