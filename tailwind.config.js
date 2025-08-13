@@ -2,38 +2,46 @@
 module.exports = {
   darkMode: ["class"],
   content: [
-    "./src/**/*.{js,ts,jsx,tsx,mdx}", // <--- aggiunto
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-  extend: {
-    colors: {
-      background: 'hsl(var(--background))',
-      foreground: 'hsl(var(--foreground))',
-      primary: {
-        DEFAULT: '#FF6B00',
-        foreground: '#FFFFFF'
+    extend: {
+      colors: {
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+
+        primary: {
+          DEFAULT: '#A7D0CD', // verde acqua chiaro
+          foreground: '#1A1A1A',
+        },
+        secondary: {
+          DEFAULT: '#F6E7D8', // beige rosa tenue
+          foreground: '#1A1A1A',
+        },
+        accent: {
+          DEFAULT: '#F9D7DC', // rosa tenue
+          foreground: '#1A1A1A',
+        },
+        muted: {
+          DEFAULT: '#F3F3F2', // grigio pastello
+          foreground: '#666666',
+        },
+        border: '#E1E1E1',
+        input: '#EDEDED',
+        ring: '#A7D0CD', // match primary
       },
-      secondary: {
-        DEFAULT: '#FFD580',
-        foreground: '#1A1A1A'
+      borderRadius: {
+        xl: '1rem',
+        '2xl': '1.5rem',
       },
-      accent: {
-        DEFAULT: '#FF9E3D',
-        foreground: '#1A1A1A'
+      boxShadow: {
+        soft: '0 4px 12px rgba(0, 0, 0, 0.05)',
       },
-      muted: {
-        DEFAULT: '#FDF8F3',
-        foreground: '#6B6B6B'
-      },
-      border: '#FF9E3D',
-      input: '#FF9E3D',
-      ring: '#FF6B00'
     },
   },
-},
   plugins: [require("tailwindcss-animate")],
 };
