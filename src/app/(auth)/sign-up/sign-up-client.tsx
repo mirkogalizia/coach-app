@@ -13,16 +13,23 @@ export default function SignUpClient() {
   const [error, setError] = useState("");
 
   async function handleSignUp() {
+    console.log("🟡 handleSignUp avviato");
     setError("");
     setLoading(true);
+
+    console.log("📧 Email:", email);
+    console.log("🔑 Password:", pwd);
+
     try {
-      await createUserWithEmailAndPassword(auth, email, pwd);
+      const result = await createUserWithEmailAndPassword(auth, email, pwd);
+      console.log("✅ Registrazione riuscita:", result.user);
       router.push("/dashboard");
     } catch (err: any) {
-      console.error(err);
-      setError("Errore nella registrazione. Riprova con un'email diversa.");
+      console.error("❌ Errore nella registrazione Firebase:", err);
+      setError("Errore nella registrazione. Email già in uso o password troppo debole.");
     } finally {
       setLoading(false);
+      console.log("⚪ handleSignUp terminato");
     }
   }
 
@@ -49,7 +56,7 @@ export default function SignUpClient() {
           onClick={handleSignUp}
           disabled={loading}
         >
-          {loading ? "Registrazione in corso…" : "Registrati"}
+          {loading ? "Registrazione…" : "Registrati"}
         </button>
         {error && (
           <p className="text-sm text-red-500">
