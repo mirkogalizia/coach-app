@@ -8,7 +8,7 @@ import Step1Obiettivi from "@/components/anamnesi/Step1Obiettivi"
 import Step2Stile from "@/components/anamnesi/Step2Stile"
 import Step3Preferenze from "@/components/anamnesi/Step3Preferenze"
 import Step4Allergie from "@/components/anamnesi/Step4Allergie"
-import Step5Altro from "@/components/anamnesi/Step5Altro"
+import Step5FotoNote from "@/components/anamnesi/Step5FotoNote"
 import { Button } from "@/components/ui/button"
 
 export default function AnamnesiPage() {
@@ -71,7 +71,13 @@ export default function AnamnesiPage() {
       {step === 2 && <Step2Stile onNext={handleNext} defaultData={formData} />}
       {step === 3 && <Step3Preferenze onNext={handleNext} defaultData={formData} />}
       {step === 4 && <Step4Allergie onNext={handleNext} defaultData={formData} />}
-      {step === 5 && <Step5Altro onSubmit={handleSubmit} defaultData={formData} />}
+      {step === 5 && (
+  <Step5FotoNote
+    data={formData}
+    setData={setFormData}
+    onSubmit={handleSubmit}
+  />
+)}
 
       {step > 1 && (
         <Button variant="ghost" className="mt-4" onClick={() => setStep((prev) => prev - 1)}>
