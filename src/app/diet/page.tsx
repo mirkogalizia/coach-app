@@ -18,10 +18,8 @@ export default function DietPage() {
       const ref = doc(db, "users", user.uid)
       const snap = await getDoc(ref)
       const data = snap.data()
-
-      const alreadyGenerated = data?.dieta && data.dieta.includes("Colazione")
-
       let dietaRaw = data?.dieta || ""
+      const alreadyGenerated = dietaRaw.includes("Colazione")
 
       if (!alreadyGenerated) {
         const token = await user.getIdToken()
@@ -50,13 +48,13 @@ export default function DietPage() {
       const parsedDays = dietaRaw
         .split(/## Giorno \d+/)
         .map((g) => g.trim())
-        .filter((g) => g && g.length > 20) // evita introduzioni
-        .map((text) => {
-          return text
+        .filter((g) => g && g.includes("Colazione"))
+        .map((text) =>
+          text
             .split(/### /)
             .map((section) => section.trim())
             .filter((line) => line.length > 0)
-        })
+        )
 
       setDays(parsedDays)
       setLoading(false)
@@ -67,6 +65,7 @@ export default function DietPage() {
 
   if (!user) return <p className="text-center mt-20">Effettua il login</p>
   if (loading) return <p className="text-center mt-20">Caricamento dieta...</p>
+  if (!days.length) return <p className="text-center mt-20">Nessuna dieta trovata.</p>
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6">
@@ -90,7 +89,7 @@ export default function DietPage() {
         </button>
       </div>
 
-      <div className="rounded-xl p-4 bg-white/20 backdrop-blur shadow space-y-4">
+      <div className="rounded-xl p-4 bg-white/20 backdrop-blur-md shadow-md space-y-4">
         {days[currentDay].map((section, i) => (
           <div key={i}>
             <h4 className="font-semibold text-lg mb-1 text-black/80 dark:text-white/90">
@@ -101,7 +100,7 @@ export default function DietPage() {
                 .split("\n")
                 .slice(1)
                 .map((line, j) => (
-                  <li key={j}>{line.replace(/^-\s*/, "")}</li>
+                  <li key={j}>{line.replace(/^[-*]\s*/, "").trim()}</li>
                 ))}
             </ul>
           </div>
