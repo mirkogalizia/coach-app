@@ -3,97 +3,86 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/useAuth"
 import { db } from "@/lib/firebase"
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore"
+import { doc, getDoc } from "firebase/firestore"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 export default function DietPage() {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
+  const [dieta, setDieta] = useState<Record<string, any> | null>(null)
   const [days, setDays] = useState<string[]>([])
   const [currentDay, setCurrentDay] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
 
-    const fetchDieta = async () => {
+    const loadDieta = async () => {
       const ref = doc(db, "users", user.uid)
       const snap = await getDoc(ref)
       const data = snap.data()
 
-      const alreadyGenerated = data?.dieta && data.dieta.includes("Colazione")
-
-      if (alreadyGenerated) {
-        const giorni = data.dieta.split(/### (?=Luned|Marted|Mercoled|Gioved|Venerd|Sabato|Domenica)/)
-        setDays(giorni.map((g) => g.trim()))
-        setLoading(false)
-        return
+      if (data?.dieta && typeof data.dieta === "object") {
+        const keys = [
+          "Lunedì",
+          "Martedì",
+          "Mercoledì",
+          "Giovedì",
+          "Venerdì",
+          "Sabato",
+          "Domenica",
+        ].filter((k) => k in data.dieta)
+        setDays(keys)
+        setDieta(data.dieta)
       }
-
-      try {
-        const token = await user.getIdToken()
-        const res = await fetch("/api/gpt/diet", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        const json = await res.json()
-        if (!json.ok) throw new Error(json.error)
-
-        const generated = json.data as string
-        await updateDoc(ref, {
-          dieta: generated,
-          updatedAt: serverTimestamp(),
-        })
-
-        const giorni = generated.split(/### (?=Luned|Marted|Mercoled|Gioved|Venerd|Sabato|Domenica)/)
-        setDays(giorni.map((g) => g.trim()))
-      } catch (err: any) {
-        console.error("Errore:", err)
-        alert("Errore generazione dieta: " + err.message)
-      }
-
       setLoading(false)
     }
 
-    fetchDieta()
+    loadDieta()
   }, [user])
 
   if (!user) return <p className="text-center mt-20">Effettua il login</p>
   if (loading) return <p className="text-center mt-20">Caricamento dieta...</p>
+  if (!dieta) return <p className="text-center mt-20">Dieta non trovata</p>
+
+  const giorno = days[currentDay]
+  const pasti = dieta[giorno] || {}
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6">
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold text-center">La tua dieta</h1>
 
       <div className="flex justify-between items-center">
-        <button
+        <Button
           onClick={() => setCurrentDay((prev) => Math.max(prev - 1, 0))}
           disabled={currentDay === 0}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-30"
+          variant="outline"
         >
           ⬅ Giorno precedente
-        </button>
-        <p className="font-semibold">Giorno {currentDay + 1}</p>
-        <button
+        </Button>
+
+        <p className="font-semibold text-lg">{giorno}</p>
+
+        <Button
           onClick={() => setCurrentDay((prev) => Math.min(prev + 1, days.length - 1))}
           disabled={currentDay === days.length - 1}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-30"
+          variant="outline"
         >
           Giorno successivo ➡
-        </button>
+        </Button>
       </div>
 
-      <div className="border rounded-xl p-4 bg-white shadow space-y-2">
-        <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-          {days[currentDay]}
-        </pre>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {Object.entries(pasti).map(([pasto, descrizione]) => (
+          <Card key={pasto} className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg capitalize">{pasto}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-line leading-relaxed">{descrizione}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   )
