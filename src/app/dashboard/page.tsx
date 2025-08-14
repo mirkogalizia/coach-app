@@ -3,12 +3,22 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import AppLayout from "@/components/AppLayout";
-import { WeeklyDots } from "@/components/WeeklyDots";
-import { SimpleMacros } from "@/components/SimpleMacros";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import { WeeklyDots } from "@/components/WeeklyDots";
+import { SimpleMacros } from "@/components/SimpleMacros";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -32,7 +42,7 @@ export default function DashboardPage() {
   const streakDays = 3;
 
   return (
-    <AppLayout>
+    <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <div className="text-base font-semibold">Ciao 👋</div>
         <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
@@ -40,47 +50,64 @@ export default function DashboardPage() {
         </Badge>
       </div>
 
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Macronutrienti</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SimpleMacros {...macros} />
-          </CardContent>
-        </Card>
+      <Carousel className="w-full">
+        <CarouselContent className="-ml-4 pl-4 space-x-4">
+          {/* MACROS */}
+          <CarouselItem className="w-[90%] max-w-[320px] shrink-0">
+            <Card className="bg-white/60 backdrop-blur-md border border-border shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-base">Macronutrienti</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SimpleMacros {...macros} />
+              </CardContent>
+            </Card>
+          </CarouselItem>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Piano di oggi</CardTitle>
-            <Badge variant="outline" className="text-xs">Pranzo + Cena</Badge>
-          </CardHeader>
-          <CardContent className="text-sm space-y-1">
-            <div className="flex justify-between">
-              <span>Pranzo</span>
-              <span className="text-muted-foreground">Manzo + verdure + EVO</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Cena</span>
-              <span className="text-muted-foreground">Salmone + insalata + uova</span>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button className="btn-gradient ios-rounded w-full h-9 text-sm">
-              Chiedi una modifica al coach
-            </Button>
-          </CardFooter>
-        </Card>
+          {/* DIETA */}
+          <CarouselItem className="w-[90%] max-w-[320px] shrink-0">
+            <Card className="bg-white/60 backdrop-blur-md border border-border shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-base">Piano di oggi</CardTitle>
+                <Badge variant="outline" className="text-xs">
+                  Pranzo + Cena
+                </Badge>
+              </CardHeader>
+              <CardContent className="text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span>Pranzo</span>
+                  <span className="text-muted-foreground">
+                    Manzo + verdure + EVO
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Cena</span>
+                  <span className="text-muted-foreground">
+                    Salmone + insalata + uova
+                  </span>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="btn-gradient ios-rounded w-full h-9 text-sm">
+                  Chiedi una modifica al coach
+                </Button>
+              </CardFooter>
+            </Card>
+          </CarouselItem>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Progressi settimanali</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <WeeklyDots />
-          </CardContent>
-        </Card>
-      </div>
-    </AppLayout>
+          {/* PROGRESSI */}
+          <CarouselItem className="w-[90%] max-w-[320px] shrink-0">
+            <Card className="bg-white/60 backdrop-blur-md border border-border shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-base">Progressi settimanali</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <WeeklyDots />
+              </CardContent>
+            </Card>
+          </CarouselItem>
+        </CarouselContent>
+      </Carousel>
+    </div>
   );
 }
