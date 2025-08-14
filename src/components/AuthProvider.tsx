@@ -1,29 +1,41 @@
 "use client";
 
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import { createContext, useContext, useEffect, useState } from "react";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 
-type AuthCtx = { user: User | null; loading: boolean };
-const Ctx = createContext<AuthCtx>({ user: null, loading: true });
-
-export function useAuth() {
-  return useContext(Ctx);
-}
+const AuthContext = createContext({ user: null, loading: true });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userRef = doc(db, "users", firebaseUser.uid);
+        const snap = await getDoc(userRef);
+        setUser({
+          ...firebaseUser,
+          ...(snap.exists() ? snap.data() : {}),
+        });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
-      console.log("👤 Auth state:", u);
     });
 
     return () => unsub();
   }, []);
 
-  return <Ctx.Provider value={{ user, loading }}>{children}</Ctx.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
 }
