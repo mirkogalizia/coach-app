@@ -72,12 +72,11 @@ export default function AnamnesiPage() {
       {step === 3 && <Step3Preferenze onNext={handleNext} defaultData={formData} />}
       {step === 4 && <Step4Allergie onNext={handleNext} defaultData={formData} />}
       {step === 5 && (
-        <Step5FotoNote
-          data={formData}
-          setData={setFormData}
-          onSubmit={handleSubmit}
-        />
-      )}
+  <div className="space-y-6">
+    <p>Hai completato l'anamnesi. Clicca su Invia per generare la tua dieta.</p>
+    <Button onClick={() => handleSubmit({})}>Invia</Button>
+  </div>
+)}
 
       {step > 1 && (
         <Button variant="ghost" className="mt-4" onClick={() => setStep((prev) => prev - 1)}>
