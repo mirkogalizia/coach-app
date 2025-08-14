@@ -1,82 +1,76 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/AuthProvider";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-
-// Componenti step
-import Step1Generalita from "@/components/anamnesi/Step1Generalita";
-import Step2Obiettivi from "@/components/anamnesi/Step2Obiettivi";
-import Step3Preferenze from "@/components/anamnesi/Step3Preferenze";
-import Step4Routine from "@/components/anamnesi/Step4Routine";
-import Step5FotoNote from "@/components/anamnesi/Step5FotoNote";
-
-const steps = [
-  { title: "Generalità", component: Step1Generalita },
-  { title: "Obiettivi & attività", component: Step2Obiettivi },
-  { title: "Preferenze alimentari", component: Step3Preferenze },
-  { title: "Routine", component: Step4Routine },
-  { title: "Foto & note", component: Step5FotoNote },
-];
+import { useEffect, useState } from "react"
+import { auth, db } from "@/lib/firebase"
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
+import { useRouter } from "next/navigation"
+import Step1Obiettivi from "@/components/anamnesi/Step1Obiettivi"
+import Step2Stile from "@/components/anamnesi/Step2Stile"
+import Step3Preferenze from "@/components/anamnesi/Step3Preferenze"
+import Step4Allergie from "@/components/anamnesi/Step4Allergie"
+import Step5Altro from "@/components/anamnesi/Step5Altro"
+import { Button } from "@/components/ui/button"
 
 export default function AnamnesiPage() {
-  const { user } = useAuth();
-  const router = useRouter();
+  const [step, setStep] = useState(1)
+  const [formData, setFormData] = useState<any>({})
+  const router = useRouter()
 
-  const [currentStep, setCurrentStep] = useState(0);
-  const [data, setData] = useState<any>({});
-  const [loading, setLoading] = useState(false);
-
-  const StepComponent = steps[currentStep].component;
-
-  const next = () => setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
-  const back = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
-
-  const submit = async () => {
-    if (!user) return;
-    setLoading(true);
-
-    try {
-      const ref = doc(db, "users", user.uid);
-      await updateDoc(ref, { anamnesi: data });
-      router.push("/dashboard");
-    } catch (err) {
-      console.error("Errore salvataggio anamnesi:", err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const checkExisting = async () => {
+      const user = auth.currentUser
+      if (!user) return
+      const snap = await getDoc(doc(db, "anamnesi", user.uid))
+      if (snap.exists()) router.push("/diet")
     }
-  };
+    checkExisting()
+  }, [router])
+
+  const handleNext = (data: any) => {
+    setFormData({ ...formData, ...data })
+    setStep((prev) => prev + 1)
+  }
+
+  const handleSubmit = async (data: any) => {
+    const user = auth.currentUser
+    if (!user) return
+    const anamnesi = { ...formData, ...data }
+    await setDoc(doc(db, "anamnesi", user.uid), { ...anamnesi, createdAt: serverTimestamp() })
+
+    // 🔁 Chiamata API per generare dieta
+    await fetch("/api/ai/generate-diet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ anamnesi }),
+    })
+      .then((res) => res.json())
+      .then(async (res) => {
+        if (res.ok) {
+          const dieta = res.data
+          const dietaRef = doc(db, "diete", user.uid)
+          await setDoc(dietaRef, { dieta, createdAt: serverTimestamp() })
+          router.push("/dieta")
+        } else {
+          console.error("Errore GPT:", res.error)
+        }
+      })
+  }
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center px-4 py-10">
-      <Card className="w-full max-w-lg glass-strong ios-rounded">
-        <CardHeader>
-          <CardTitle className="text-lg">Step {currentStep + 1} – {steps[currentStep].title}</CardTitle>
-        </CardHeader>
+    <main className="max-w-xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Anamnesi alimentare</h1>
 
-        <CardContent className="space-y-6">
-          <StepComponent data={data} setData={setData} />
-        </CardContent>
+      {step === 1 && <Step1Obiettivi onNext={handleNext} />}
+      {step === 2 && <Step2Stile onNext={handleNext} />}
+      {step === 3 && <Step3Preferenze onNext={handleNext} />}
+      {step === 4 && <Step4Allergie onNext={handleNext} />}
+      {step === 5 && <Step5Altro onSubmit={handleSubmit} />}
 
-        <CardFooter className="flex justify-between items-center">
-          <Button variant="ghost" onClick={back} disabled={currentStep === 0}>Indietro</Button>
-
-          {currentStep === steps.length - 1 ? (
-            <Button onClick={submit} disabled={loading}>
-              {loading ? <Loader2 className="animate-spin size-4 mr-2" /> : null}
-              Salva e inizia
-            </Button>
-          ) : (
-            <Button onClick={next}>Avanti</Button>
-          )}
-        </CardFooter>
-      </Card>
-    </div>
-  );
+      {step > 1 && (
+        <Button variant="ghost" className="mt-4" onClick={() => setStep((prev) => prev - 1)}>
+          Indietro
+        </Button>
+      )}
+    </main>
+  )
 }
