@@ -2,9 +2,14 @@
 
 import { useState } from "react"
 import { useAuth } from "@/lib/useAuth"
+import { doc, setDoc, getDoc, collection, addDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { useRouter } from "next/navigation"
 
 export default function AnamnesiPage() {
   const { user } = useAuth()
+  const router = useRouter()
+
   const [anamnesi, setAnamnesi] = useState({
     eta: "",
     sesso: "",
@@ -14,18 +19,27 @@ export default function AnamnesiPage() {
   })
 
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState("")
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setAnamnesi({ ...anamnesi, [e.target.name]: e.target.value })
   }
 
   const handleSubmit = async () => {
-    if (!user) return alert("Non sei loggato.")
+    if (!user) return alert("Devi essere loggato")
 
     setLoading(true)
 
     try {
+      // 🔎 Controlla se l'anamnesi esiste
+      const docRef = doc(db, "users", user.uid)
+      const snap = await getDoc(docRef)
+
+      if (!snap.exists() || !snap.data().anamnesi) {
+        // 💾 Salva anamnesi
+        await setDoc(docRef, { anamnesi }, { merge: true })
+      }
+
+      // 🤖 Chiama API per generare dieta
       const token = await user.getIdToken()
       const res = await fetch("/api/gpt/diet", {
         method: "POST",
@@ -37,15 +51,14 @@ export default function AnamnesiPage() {
       })
 
       const data = await res.json()
-
       if (data.ok) {
-        setResult(data.data) // puoi anche fare un redirect a /diet
+        router.push("/diet")
       } else {
-        alert("Errore: " + data.error)
+        alert("Errore generazione dieta: " + data.error)
       }
     } catch (err) {
-      console.error(err)
-      alert("Errore nella generazione.")
+      console.error("Errore:", err)
+      alert("Errore nella generazione")
     } finally {
       setLoading(false)
     }
@@ -75,10 +88,6 @@ export default function AnamnesiPage() {
       <button onClick={handleSubmit} disabled={loading} className="bg-black text-white px-4 py-2 rounded">
         {loading ? "Generazione in corso..." : "Genera dieta"}
       </button>
-
-      {result && (
-        <pre className="mt-4 p-4 bg-gray-100 whitespace-pre-wrap">{result}</pre>
-      )}
     </div>
   )
 }
