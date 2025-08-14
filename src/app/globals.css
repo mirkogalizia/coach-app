@@ -145,3 +145,16 @@ html, body {
   height: calc(100svh - var(--dock-h));
   overflow: hidden;
 }
+/* globals.css */
+html,
+body {
+  overscroll-behavior-y: contain;
+  touch-action: manipulation;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+input,
+textarea {
+  font-size: 16px; /* evita zoom iOS su input piccoli */
+}

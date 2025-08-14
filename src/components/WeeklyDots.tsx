@@ -27,7 +27,6 @@ export function WeeklyDots() {
   // --- Sync: Firestore se loggato, altrimenti localStorage ---
   useEffect(() => {
     if (!user) {
-      // localStorage mode
       try {
         const raw = localStorage.getItem(storageKey);
         setWeek(raw ? (JSON.parse(raw) as DayStatus[]) : Array(7).fill(0));
@@ -36,30 +35,26 @@ export function WeeklyDots() {
       }
       return;
     }
-    // Firestore mode
     const ref = doc(db, "users", user.uid, "weeks", weekKey);
-    // live subscribe
     const unsub = onSnapshot(ref, (snap) => {
       if (snap.exists()) {
         const data = snap.data() as { days: DayStatus[] };
         if (Array.isArray(data.days) && data.days.length === 7) setWeek(data.days);
       }
     });
-    // fetch initial (in caso non esista)
     getDoc(ref).then((snap) => {
       if (!snap.exists()) setDoc(ref, { days: Array(7).fill(0), startISO }, { merge: true });
     });
     return () => unsub();
   }, [user, storageKey, weekKey, startISO]);
 
-  // salva
   useEffect(() => {
     if (!user) {
       try { localStorage.setItem(storageKey, JSON.stringify(week)); } catch {}
       return;
     }
     const ref = doc(db, "users", user.uid, "weeks", weekKey);
-    setDoc(ref, { days: week, startISO }, { merge: true }).catch(()=>{});
+    setDoc(ref, { days: week, startISO }, { merge: true }).catch(() => {});
   }, [user, week, weekKey, startISO, storageKey]);
 
   const todayIdx = getWeekdayIndexMonFirst(now);
@@ -104,7 +99,7 @@ export function WeeklyDots() {
               <Info className="h-4 w-4 text-muted-foreground" />
             </Button>
           </div>
-          <Badge className="bg-[#FF6B00] text-white">{stats.p}% ok</Badge>
+          <Badge className="bg-accent text-accent-foreground">{stats.p}% ok</Badge>
         </CardHeader>
 
         <CardContent className="p-3 pt-1 space-y-2">
@@ -127,9 +122,9 @@ export function WeeklyDots() {
                   className={cn(
                     "h-6 w-6 rounded-full border transition-transform active:scale-95 mx-auto",
                     status === 0 && "bg-muted/40 border-transparent",
-                    status === 1 && "bg-emerald-500 border-emerald-600 shadow-[0_0_0_1px_rgba(16,185,129,0.3)]",
-                    status === -1 && "bg-rose-500 border-rose-600 shadow-[0_0_0_1px_rgba(244,63,94,0.3)]",
-                    isToday && "ring-2 ring-[#FF6B00]/50"
+                    status === 1 && "bg-emerald-400 border-emerald-500 shadow-[0_0_0_1px_rgba(52,211,153,0.3)]",
+                    status === -1 && "bg-rose-400 border-rose-500 shadow-[0_0_0_1px_rgba(251,113,133,0.3)]",
+                    isToday && "ring-2 ring-accent/50"
                   )}
                   aria-label={`${daysIT[idx]} stato`}
                 />
@@ -145,7 +140,7 @@ export function WeeklyDots() {
 
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Verdi: {stats.green} • Rossi: {stats.red}</span>
-            <span>Tracciati: {stats.green + stats.red}/7</span>
+            <span>Tracciati: {stats.tracked}/7</span>
           </div>
         </CardContent>
       </GlassCard>
