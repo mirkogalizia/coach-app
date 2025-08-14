@@ -1,42 +1,29 @@
+// src/app/api/ai/generate-diet/route.ts
 import { NextResponse } from "next/server";
-import { openai } from "@/lib/openai"; // Assicurati che questo import sia corretto
-import type { AnamnesiData } from "@/types"; // Tipo opzionale, puoi usare anche `any`
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const anamnesi: AnamnesiData = body.anamnesi;
+    const { anamnesi } = await req.json();
+    console.log("📥 Anamnesi ricevuta:", anamnesi);
 
-    if (!anamnesi) {
-      return NextResponse.json({ ok: false, error: "Dati mancanti" }, { status: 400 });
-    }
-
-    // Costruzione del prompt per OpenAI
-    const prompt = `Genera una dieta giornaliera basata su queste informazioni:\n${JSON.stringify(anamnesi, null, 2)}\n\nLa dieta deve includere colazione, spuntini, pranzo e cena.`;
+    const prompt = `Crea una dieta personalizzata in base ai seguenti dati: ${JSON.stringify(anamnesi)}`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4", // o gpt-3.5-turbo
-      messages: [
-        { role: "system", content: "Sei un nutrizionista professionista." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.7,
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-4o", // oppure prova "gpt-3.5-turbo" se hai problemi
     });
 
-    const responseText = completion.choices?.[0]?.message?.content;
+    const dieta = completion.choices[0].message.content;
+    console.log("✅ Dieta generata:", dieta);
 
-    if (!responseText) {
-      return NextResponse.json({ ok: false, error: "Nessuna risposta da OpenAI" }, { status: 500 });
-    }
-
-    // ✅ Risposta serializzabile, non una funzione
-    return NextResponse.json({
-      ok: true,
-      data: responseText,
-    });
-
-  } catch (err) {
-    console.error("Errore API /generate-diet:", err);
-    return NextResponse.json({ ok: false, error: "Errore interno" }, { status: 500 });
+    return NextResponse.json({ ok: true, data: dieta });
+  } catch (error: any) {
+    console.error("❌ Errore durante la chiamata a OpenAI:", error);
+    return NextResponse.json({ ok: false, error: error.message || "Errore interno" });
   }
 }
