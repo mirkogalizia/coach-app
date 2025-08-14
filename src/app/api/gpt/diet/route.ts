@@ -1,11 +1,11 @@
 // /src/app/api/gpt/diet/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { getApps, initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import OpenAI from "openai";
 import { db } from "@/lib/firebase";
 
-// Inizializza Firebase se non già fatto
 if (!getApps().length) {
   initializeApp({
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -18,32 +18,37 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const uid = body.uid;
-    if (!uid) {
-      return NextResponse.json({ ok: false, error: "UID mancante" }, { status: 400 });
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return NextResponse.json({ ok: false, error: "Token mancante" }, { status: 401 });
     }
 
-    let { anamnesi } = body;
+    const idToken = authHeader.split("Bearer ")[1];
+    const uid = await getUidFromToken(idToken);
+    if (!uid) {
+      return NextResponse.json({ ok: false, error: "Token non valido" }, { status: 401 });
+    }
 
-    // Se anamnesi non è passata, prova a prenderla dal db
+    const body = await req.json().catch(() => null);
+    let { anamnesi } = body || {};
+
+    const userRef = doc(db, "users", uid);
+    const snap = await getDoc(userRef);
+
     if (!anamnesi) {
-      const ref = doc(db, "users", uid);
-      const snap = await getDoc(ref);
-      if (!snap.exists() || !snap.data()) {
-        return NextResponse.json({ ok: false, error: "Utente non trovato" }, { status: 404 });
-      }
       const data = snap.data();
+      if (!data || !(data.eta && data.sesso && data.obiettivo && data.dieta)) {
+        return NextResponse.json({ ok: false, error: "Anamnesi incompleta o non trovata" }, { status: 400 });
+      }
       anamnesi = {
         eta: data.eta,
         sesso: data.sesso,
         obiettivo: data.obiettivo,
         dieta: data.dieta,
-        allergie: data.allergie,
+        allergie: data.allergie || "",
       };
     }
 
-    // Prompt OpenAI
     const prompt = `Crea una dieta settimanale per un utente con queste caratteristiche: ${JSON.stringify(anamnesi)}`;
 
     const completion = await openai.chat.completions.create({
@@ -53,9 +58,7 @@ export async function POST(req: NextRequest) {
 
     const dieta = completion.choices[0].message.content;
 
-    // Salva nel Firestore
-    const ref = doc(db, "users", uid);
-    await updateDoc(ref, {
+    await updateDoc(userRef, {
       dieta,
       updatedAt: serverTimestamp(),
     });
@@ -64,5 +67,23 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("Errore generazione dieta:", err);
     return NextResponse.json({ ok: false, error: err.message || "Errore interno" }, { status: 500 });
+  }
+}
+
+async function getUidFromToken(token: string): Promise<string | null> {
+  try {
+    // 👉 Client-side token verification fallback
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: token }),
+      }
+    );
+    const json = await res.json();
+    return json?.users?.[0]?.localId || null;
+  } catch (e) {
+    console.error("Errore verifica token:", e);
+    return null;
   }
 }

@@ -33,18 +33,19 @@ export default function DietPage() {
         return
       }
 
-      // Non esiste dieta generata: la chiediamo via API
-      const token = await user.getIdToken()
-      const res = await fetch("/api/gpt/diet", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      try {
+        const token = await user.getIdToken()
+        const res = await fetch("/api/gpt/diet", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-      const json = await res.json()
-      if (json.ok) {
+        const json = await res.json()
+        if (!json.ok) throw new Error(json.error)
+
         const generated = json.data as string
         await updateDoc(ref, {
           dieta: generated,
@@ -53,8 +54,9 @@ export default function DietPage() {
 
         const giorni = generated.split(/### (?=Luned|Marted|Mercoled|Gioved|Venerd|Sabato|Domenica)/)
         setDays(giorni.map((g) => g.trim()))
-      } else {
-        alert("Errore generazione dieta: " + json.error)
+      } catch (err: any) {
+        console.error("Errore:", err)
+        alert("Errore generazione dieta: " + err.message)
       }
 
       setLoading(false)
