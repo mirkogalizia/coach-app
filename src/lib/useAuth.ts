@@ -1,29 +1,16 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "./firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { useEffect, useState } from "react"
+import { onAuthStateChanged } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        // Salva/aggiorna il documento utente
-        await setDoc(doc(db, "users", user.uid), {
-          email: user.email,
-          createdAt: new Date(),
-        }, { merge: true });
-      } else {
-        setUser(null);
-      }
-    });
+    const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u))
+    return () => unsubscribe()
+  }, [])
 
-    return () => unsubscribe();
-  }, []);
-
-  return { user };
+  return { user }
 }
