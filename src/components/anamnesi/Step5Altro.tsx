@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
+import { Button } from "@/components/ui/button"; // ✅ aggiunto
 type Props = {
   data?: any;
   setData: (data: any) => void;
+  onSubmit: (data: any) => void; // ✅ aggiunto
 };
 
-export default function Step5FotoNote({ data = {}, setData }: Props) {
+export default function Step5FotoNote({ data = {}, setData, onSubmit }: Props) {
   const [note, setNote] = useState<string>(data.note || "");
   const [foto, setFoto] = useState<Record<string, string>>({
     fronte: data.foto?.fronte || "",
@@ -67,6 +68,10 @@ export default function Step5FotoNote({ data = {}, setData }: Props) {
             )}
           </div>
         ))}
+      </div>
+
+      <div className="pt-6">
+        <Button onClick={() => onSubmit({ note, foto })}>Invia</Button>
       </div>
     </div>
   );

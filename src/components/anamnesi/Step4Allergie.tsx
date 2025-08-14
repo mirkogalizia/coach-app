@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type Props = {
   data?: any;
   setData: (data: any) => void;
+  onNext: () => void; // ✅ AGGIUNTO
 };
 
 const orariPossibili = [
@@ -15,7 +17,7 @@ const orariPossibili = [
   "15", "16", "17", "18", "19", "20", "21", "22"
 ];
 
-export default function Step4Routine({ data = {}, setData }: Props) {
+export default function Step4Routine({ data = {}, setData, onNext }: Props) {
   const [routine, setRoutine] = useState(() => {
     const r = data.routine || {};
     return {
@@ -76,6 +78,10 @@ export default function Step4Routine({ data = {}, setData }: Props) {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="pt-6">
+        <Button onClick={onNext}>Avanti</Button> {/* ✅ BOTTONE */}
       </div>
     </div>
   );

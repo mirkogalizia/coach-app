@@ -3,18 +3,20 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type Props = {
   data?: any;
   setData: (data: any) => void;
+  onNext: () => void; // ✅ AGGIUNTO
 };
 
 const carbOptions = ["Pasta", "Pane", "Riso", "Patate", "Farro", "Avena", "Legumi"];
 const proteinOptions = ["Carne rossa", "Pollo", "Pesce", "Uova", "Tofu", "Yogurt greco", "Proteine in polvere"];
 const fatOptions = ["Olio EVO", "Frutta secca", "Avocado", "Burro", "Semi"];
 
-export default function Step3Preferenze({ data = {}, setData }: Props) {
+export default function Step3Preferenze({ data = {}, setData, onNext }: Props) {
   const [info, setInfo] = useState({
     preferenze: data.preferenze || {
       carboidrati: [],
@@ -117,6 +119,10 @@ export default function Step3Preferenze({ data = {}, setData }: Props) {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="pt-6">
+        <Button onClick={onNext}>Avanti</Button> {/* ✅ BOTTONE AVANTI */}
       </div>
     </div>
   );

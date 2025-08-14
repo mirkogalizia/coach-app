@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"; // ✅ import bottone
 
 type Props = {
   data?: any;
   setData: (data: any) => void;
+  onNext: () => void; // ✅ aggiunta prop
 };
 
-export default function Step1Generalita({ data = {}, setData }: Props) {
+export default function Step1Generalita({ data = {}, setData, onNext }: Props) {
   const [info, setInfo] = useState({
     nome: data?.nome ?? "",
     età: data?.età ?? "",
@@ -85,6 +87,10 @@ export default function Step1Generalita({ data = {}, setData }: Props) {
           value={info.allergie}
           onChange={(e) => setInfo({ ...info, allergie: e.target.value })}
         />
+      </div>
+
+      <div className="pt-6">
+        <Button onClick={onNext}>Avanti</Button> {/* ✅ bottone avanti */}
       </div>
     </div>
   );

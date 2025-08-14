@@ -5,13 +5,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   data?: any;
   setData: (data: any) => void;
+  onNext: () => void; // ✅ aggiunto
 };
 
-export default function Step2Obiettivi({ data = {}, setData }: Props) {
+export default function Step2Obiettivi({ data = {}, setData, onNext }: Props) {
   const [info, setInfo] = useState({
     obiettivo: data?.obiettivo ?? "",
     tipoAllenamento: data?.tipoAllenamento ?? "",
@@ -67,6 +69,10 @@ export default function Step2Obiettivi({ data = {}, setData }: Props) {
           checked={info.prePostWo}
           onCheckedChange={(val) => setInfo({ ...info, prePostWo: val })}
         />
+      </div>
+
+      <div className="pt-6">
+        <Button onClick={onNext}>Avanti</Button> {/* ✅ bottone per andare avanti */}
       </div>
     </div>
   );
