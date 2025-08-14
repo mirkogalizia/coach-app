@@ -1,43 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 type Props = {
-  data: any;
+  data?: any;
   setData: (data: any) => void;
 };
 
-export default function Step5FotoNote({ data, setData }: Props) {
-  const [note, setNote] = useState(data.note || "");
-  const [foto, setFoto] = useState(
-    data.foto || {
-      fronte: "",
-      profilo: "",
-      retro: "",
-    }
-  );
+export default function Step5FotoNote({ data = {}, setData }: Props) {
+  const [note, setNote] = useState<string>(data.note || "");
+  const [foto, setFoto] = useState<Record<string, string>>({
+    fronte: data.foto?.fronte || "",
+    profilo: data.foto?.profilo || "",
+    retro: data.foto?.retro || "",
+  });
 
-  const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>, tipo: string) => {
+  const uploadImage = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    tipo: string
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // salva temporaneamente come URL locale
     const url = URL.createObjectURL(file);
-    setFoto((prev: any) => ({ ...prev, [tipo]: url }));
+    setFoto((prev) => ({ ...prev, [tipo]: url }));
 
-    // In futuro qui puoi aggiungere upload su Firebase Storage e salvare la URL
-    // const storageRef = ref(storage, `foto/${user.uid}/${tipo}`);
-    // await uploadBytes(storageRef, file);
-    // const downloadURL = await getDownloadURL(storageRef);
-    // setFoto((prev) => ({ ...prev, [tipo]: downloadURL }));
+    // TODO: Upload to Firebase Storage
   };
 
   useEffect(() => {
-    setData({ ...data, foto, note });
-  }, [foto, note]);
+    setData({ ...data, note, foto });
+  }, [note, foto]);
 
   return (
     <div className="space-y-6">

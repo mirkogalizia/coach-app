@@ -6,7 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  data: any;
+  data?: any;
   setData: (data: any) => void;
 };
 
@@ -14,7 +14,7 @@ const carbOptions = ["Pasta", "Pane", "Riso", "Patate", "Farro", "Avena", "Legum
 const proteinOptions = ["Carne rossa", "Pollo", "Pesce", "Uova", "Tofu", "Yogurt greco", "Proteine in polvere"];
 const fatOptions = ["Olio EVO", "Frutta secca", "Avocado", "Burro", "Semi"];
 
-export default function Step3Preferenze({ data, setData }: Props) {
+export default function Step3Preferenze({ data = {}, setData }: Props) {
   const [info, setInfo] = useState({
     preferenze: data.preferenze || {
       carboidrati: [],

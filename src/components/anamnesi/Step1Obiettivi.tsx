@@ -5,18 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Props = {
-  data: any;
+  data?: any;
   setData: (data: any) => void;
 };
 
-export default function Step1Generalita({ data, setData }: Props) {
+export default function Step1Generalita({ data = {}, setData }: Props) {
   const [info, setInfo] = useState({
-    nome: data.nome || "",
-    età: data.età || "",
-    altezza: data.altezza || "",
-    peso: data.peso || "",
-    sesso: data.sesso || "",
-    allergie: data.allergie || "",
+    nome: data?.nome ?? "",
+    età: data?.età ?? "",
+    altezza: data?.altezza ?? "",
+    peso: data?.peso ?? "",
+    sesso: data?.sesso ?? "",
+    allergie: data?.allergie ?? "",
   });
 
   useEffect(() => {

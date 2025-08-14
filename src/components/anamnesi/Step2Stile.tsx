@@ -7,16 +7,16 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Switch } from "@/components/ui/switch";
 
 type Props = {
-  data: any;
+  data?: any;
   setData: (data: any) => void;
 };
 
-export default function Step2Obiettivi({ data, setData }: Props) {
+export default function Step2Obiettivi({ data = {}, setData }: Props) {
   const [info, setInfo] = useState({
-    obiettivo: data.obiettivo || "",
-    tipoAllenamento: data.tipoAllenamento || "",
-    frequenzaAllenamento: data.frequenzaAllenamento || "",
-    prePostWo: data.prePostWo || false,
+    obiettivo: data?.obiettivo ?? "",
+    tipoAllenamento: data?.tipoAllenamento ?? "",
+    frequenzaAllenamento: data?.frequenzaAllenamento ?? "",
+    prePostWo: data?.prePostWo ?? false,
   });
 
   useEffect(() => {

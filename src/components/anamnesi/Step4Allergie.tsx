@@ -3,11 +3,10 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  data: any;
+  data?: any;
   setData: (data: any) => void;
 };
 
@@ -16,14 +15,15 @@ const orariPossibili = [
   "15", "16", "17", "18", "19", "20", "21", "22"
 ];
 
-export default function Step4Routine({ data, setData }: Props) {
-  const [routine, setRoutine] = useState(
-    data.routine || {
-      sveglia: "",
-      sonno: "",
-      orari_pasti: [],
-    }
-  );
+export default function Step4Routine({ data = {}, setData }: Props) {
+  const [routine, setRoutine] = useState(() => {
+    const r = data.routine || {};
+    return {
+      sveglia: r.sveglia || "",
+      sonno: r.sonno || "",
+      orari_pasti: r.orari_pasti || [],
+    };
+  });
 
   useEffect(() => {
     setData({ ...data, routine });
