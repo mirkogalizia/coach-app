@@ -27,7 +27,7 @@ export default function AnamnesiPage() {
       const snap = await getDoc(ref)
       const data = snap.data()
       if (data?.anamnesi) {
-        router.push("/dieta")
+        router.push("/diet")
       } else {
         setLoading(false) // mostra il form solo se manca l'anamnesi
       }
