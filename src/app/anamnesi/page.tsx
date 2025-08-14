@@ -34,37 +34,44 @@ export default function AnamnesiPage() {
   const handleSubmit = async (data: any) => {
     const user = auth.currentUser
     if (!user) return
-    const anamnesi = { ...formData, ...data }
-    await setDoc(doc(db, "anamnesi", user.uid), { ...anamnesi, createdAt: serverTimestamp() })
 
-    // 🔁 Chiamata API per generare dieta
-    await fetch("/api/ai/generate-diet", {
+    const anamnesi = { ...formData, ...data }
+
+    await setDoc(doc(db, "anamnesi", user.uid), {
+      ...anamnesi,
+      createdAt: serverTimestamp(),
+    })
+
+    // Chiamata API OpenAI
+    const res = await fetch("/api/ai/generate-diet", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ anamnesi }),
     })
-      .then((res) => res.json())
-      .then(async (res) => {
-        if (res.ok) {
-          const dieta = res.data
-          const dietaRef = doc(db, "diete", user.uid)
-          await setDoc(dietaRef, { dieta, createdAt: serverTimestamp() })
-          router.push("/dieta")
-        } else {
-          console.error("Errore GPT:", res.error)
-        }
+
+    const result = await res.json()
+
+    if (result.ok) {
+      const dieta = result.data
+      await setDoc(doc(db, "diete", user.uid), {
+        dieta,
+        createdAt: serverTimestamp(),
       })
+      router.push("/diet")
+    } else {
+      console.error("Errore nella generazione della dieta:", result.error)
+    }
   }
 
   return (
     <main className="max-w-xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Anamnesi alimentare</h1>
 
-      {step === 1 && <Step1Obiettivi onNext={handleNext} />}
-      {step === 2 && <Step2Stile onNext={handleNext} />}
-      {step === 3 && <Step3Preferenze onNext={handleNext} />}
-      {step === 4 && <Step4Allergie onNext={handleNext} />}
-      {step === 5 && <Step5Altro onSubmit={handleSubmit} />}
+      {step === 1 && <Step1Obiettivi onNext={handleNext} defaultData={formData} />}
+      {step === 2 && <Step2Stile onNext={handleNext} defaultData={formData} />}
+      {step === 3 && <Step3Preferenze onNext={handleNext} defaultData={formData} />}
+      {step === 4 && <Step4Allergie onNext={handleNext} defaultData={formData} />}
+      {step === 5 && <Step5Altro onSubmit={handleSubmit} defaultData={formData} />}
 
       {step > 1 && (
         <Button variant="ghost" className="mt-4" onClick={() => setStep((prev) => prev - 1)}>
