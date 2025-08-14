@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { LayoutWrapper } from "@/components/LayoutWrapper";
+import { Button } from "@/components/ui/button";
+import { Dumbbell } from "lucide-react";
+import { ChatDock } from "@/components/chat-dock";
 
 export default function WorkoutPage() {
   const { user, loading } = useAuth();
@@ -17,13 +19,16 @@ export default function WorkoutPage() {
   if (!user) return null;
 
   return (
-    <LayoutWrapper>
-      <div className="space-y-4">
-        <h1 className="text-xl font-bold">Workout</h1>
-        <p className="text-sm text-muted-foreground">
-          Nessun piano di allenamento impostato. Chiedi al coach.
-        </p>
+    <div className="space-y-6 pb-28">
+      <div className="flex items-center gap-2">
+        <Dumbbell className="text-primary" />
+        <h1 className="text-xl font-bold">Allenamento</h1>
       </div>
-    </LayoutWrapper>
+      <p className="text-sm text-muted-foreground">
+        Nessun piano impostato per oggi. Puoi chiedere al coach qui sotto.
+      </p>
+      <Button className="w-full">Chiedi al coach</Button>
+      <ChatDock context="workout" onSend={() => {}} />
+    </div>
   );
 }
