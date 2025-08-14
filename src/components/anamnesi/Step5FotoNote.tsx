@@ -1,3 +1,4 @@
+// ✅ Step5FotoNote.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,8 +9,8 @@ import { Button } from "@/components/ui/button";
 
 type Props = {
   data?: any;
-  setData: (data: any) => void;
-  onSubmit: (data: any) => void;
+  setData?: (data: any) => void;
+  onSubmit?: (data: any) => void;
 };
 
 export default function Step5FotoNote({ data = {}, setData, onSubmit }: Props) {
@@ -27,19 +28,24 @@ export default function Step5FotoNote({ data = {}, setData, onSubmit }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Preview locale (puoi rimuoverlo se carichi direttamente su Firebase)
     const url = URL.createObjectURL(file);
     setFoto((prev) => ({ ...prev, [tipo]: url }));
-
-    // TODO: Upload su Firebase Storage se necessario
   };
 
   useEffect(() => {
-    setData({ ...data, note, foto });
+    if (typeof setData === "function") {
+      setData({ ...data, note, foto });
+    } else {
+      console.warn("setData non definito o non funzione", setData);
+    }
   }, [note, foto]);
 
   const handleInvia = () => {
-    onSubmit({ ...data, note, foto });
+    if (typeof onSubmit === "function") {
+      onSubmit({ ...data, note, foto });
+    } else {
+      console.error("onSubmit non definito o non funzione", onSubmit);
+    }
   };
 
   return (
