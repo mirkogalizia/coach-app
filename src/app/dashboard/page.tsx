@@ -1,15 +1,27 @@
 // src/app/dashboard/page.tsx
 "use client";
 
+"use client";
+
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import { WeeklyDots } from "@/components/WeeklyDots";
 import { SimpleMacros } from "@/components/SimpleMacros";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -33,19 +45,21 @@ export default function DashboardPage() {
   const streakDays = 3;
 
   return (
-    <div className="pt-6 pb-28 px-3 max-w-md mx-auto">
+    <div className="pt-6 pb-32 px-3 max-w-md mx-auto">
+      {/* Header utente */}
       <div className="flex items-center justify-between mb-4">
         <div className="text-base font-semibold">Ciao 👋</div>
-        <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
+        <Badge variant="secondary">
           Streak: {streakDays} giorni
         </Badge>
       </div>
 
-      <Carousel className="w-full">
-        <CarouselContent className="-ml-2">
-          {/* MACRONUTRIENTI */}
-          <CarouselItem className="pl-2">
-            <Card className="bg-white/60 backdrop-blur-md border border-border shadow-lg">
+      {/* Carousel a schede */}
+      <Carousel className="w-full overflow-x-hidden">
+        <CarouselContent className="flex gap-4 px-1">
+          {/* Macros */}
+          <CarouselItem className="basis-[90%] shrink-0">
+            <Card className="bg-white/60 backdrop-blur-md border shadow-xl rounded-xl">
               <CardHeader>
                 <CardTitle className="text-base">Macronutrienti</CardTitle>
               </CardHeader>
@@ -61,10 +75,10 @@ export default function DashboardPage() {
             </Card>
           </CarouselItem>
 
-          {/* PIANO DI OGGI */}
-          <CarouselItem className="pl-2">
-            <Card className="bg-white/60 backdrop-blur-md border border-border shadow-lg">
-              <CardHeader>
+          {/* Piano */}
+          <CarouselItem className="basis-[90%] shrink-0">
+            <Card className="bg-white/60 backdrop-blur-md border shadow-xl rounded-xl">
+              <CardHeader className="flex items-center justify-between">
                 <CardTitle className="text-base">Piano di oggi</CardTitle>
                 <Badge variant="outline" className="text-xs">Pranzo + Cena</Badge>
               </CardHeader>
@@ -86,9 +100,9 @@ export default function DashboardPage() {
             </Card>
           </CarouselItem>
 
-          {/* PROGRESSI SETTIMANALI */}
-          <CarouselItem className="pl-2">
-            <Card className="bg-white/60 backdrop-blur-md border border-border shadow-lg">
+          {/* Progressi */}
+          <CarouselItem className="basis-[90%] shrink-0">
+            <Card className="bg-white/60 backdrop-blur-md border shadow-xl rounded-xl">
               <CardHeader>
                 <CardTitle className="text-base">Progressi settimanali</CardTitle>
               </CardHeader>
