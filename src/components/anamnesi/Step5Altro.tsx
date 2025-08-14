@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button"; // ✅ aggiunto
+import { Button } from "@/components/ui/button";
+
 type Props = {
   data?: any;
   setData: (data: any) => void;
-  onSubmit: (data: any) => void; // ✅ aggiunto
+  onSubmit: (data: any) => void;
 };
 
 export default function Step5FotoNote({ data = {}, setData, onSubmit }: Props) {
@@ -26,15 +27,20 @@ export default function Step5FotoNote({ data = {}, setData, onSubmit }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Preview locale (puoi rimuoverlo se carichi direttamente su Firebase)
     const url = URL.createObjectURL(file);
     setFoto((prev) => ({ ...prev, [tipo]: url }));
 
-    // TODO: Upload to Firebase Storage
+    // TODO: Upload su Firebase Storage se necessario
   };
 
   useEffect(() => {
     setData({ ...data, note, foto });
   }, [note, foto]);
+
+  const handleInvia = () => {
+    onSubmit({ ...data, note, foto });
+  };
 
   return (
     <div className="space-y-6">
@@ -71,7 +77,7 @@ export default function Step5FotoNote({ data = {}, setData, onSubmit }: Props) {
       </div>
 
       <div className="pt-6">
-        <Button onClick={() => onSubmit({ note, foto })}>Invia</Button>
+        <Button onClick={handleInvia}>Invia</Button>
       </div>
     </div>
   );
