@@ -1,5 +1,5 @@
 import { initializeApp, getApps, type FirebaseOptions } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -12,13 +12,12 @@ const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Check variabili mancanti (aiuta a debuggare l’"invalid-api-key")
+// Check variabili mancanti
 function assertConfig(cfg: Record<string, any>) {
   const missing = Object.entries(cfg)
     .filter(([_, v]) => !v)
     .map(([k]) => k);
   if (missing.length) {
-    // NON loggare i valori, solo i nomi mancanti
     console.error("[Firebase] Missing env:", missing.join(", "));
     throw new Error(
       `Firebase env missing: ${missing.join(", ")}. ` +
@@ -33,3 +32,6 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// ✅ FIX AGGIUNTO:
+export { onAuthStateChanged };

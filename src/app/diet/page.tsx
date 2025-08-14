@@ -1,4 +1,3 @@
-// src/app/diet/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Salad } from "lucide-react";
+import { Salad, Sparkles } from "lucide-react";
 import { ChatDock } from "@/components/chat-dock";
 import {
   Dialog,
@@ -52,7 +51,6 @@ export default function DietPage() {
   if (!user) return null;
 
   function handleAI(_msg: string) {
-    // MOCK: simulazione risposta AI
     const mock: PreviewPayload = {
       meals: [
         {
@@ -79,7 +77,7 @@ export default function DietPage() {
   return (
     <div className="space-y-6 pb-28">
       {/* CARD INIZIALE */}
-      <Card className="bg-white/70 backdrop-blur-md shadow-xl border-none rounded-xl">
+      <Card className="bg-white/60 backdrop-blur-xl shadow-lg border border-border rounded-xl">
         <CardHeader className="flex items-center gap-2">
           <Salad className="text-primary" />
           <CardTitle className="text-lg font-semibold">Piano alimentare</CardTitle>
@@ -91,10 +89,12 @@ export default function DietPage() {
         </CardContent>
       </Card>
 
+      {/* PULSANTE */}
       <Button
         className="w-full h-10 text-sm font-medium ios-rounded btn-gradient"
         onClick={() => handleAI("Ottimizza giornata")}
       >
+        <Sparkles className="w-4 h-4 mr-2" />
         Chiedi al coach
       </Button>
 
@@ -103,7 +103,7 @@ export default function DietPage() {
 
       {/* PREVIEW */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md bg-white/60 backdrop-blur-md border border-border rounded-xl">
           <DialogHeader>
             <DialogTitle>Proposta – Dieta di oggi</DialogTitle>
           </DialogHeader>
