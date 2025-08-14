@@ -1,42 +1,56 @@
-// src/components/BottomNav.tsx
 "use client";
 
+import { Dumbbell, LogOut, Salad, User2, Home } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Dumbbell, Home, Salad, User } from "lucide-react";
-import { useAuth } from "./AuthProvider";
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { signOut } from "firebase/auth";
+import { auth } from "@/firebase";
 
-const routes = [
+const navItems = [
   { href: "/dashboard", icon: Home, label: "Home" },
   { href: "/diet", icon: Salad, label: "Dieta" },
   { href: "/workout", icon: Dumbbell, label: "Workout" },
-  { href: "/account", icon: User, label: "Account" },
+  { href: "/account", icon: User2, label: "Account" },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
 
-  if (!user) return null; // 👈 Nasconde se non sei loggato
+  async function handleLogout() {
+    await signOut(auth);
+    router.replace("/sign-in");
+  }
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white/90 backdrop-blur border-t shadow-lg">
-      <div className="max-w-md mx-auto flex justify-around py-2">
-        {routes.map(({ href, icon: Icon, label }) => {
-          const active = pathname === href;
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white/70 backdrop-blur-md shadow-md border-t border-border">
+      <div className="mx-auto flex max-w-md items-center justify-between px-6 py-2">
+        {navItems.map((item) => {
+          const active = pathname === item.href;
           return (
             <Link
-              key={href}
-              href={href}
-              className={`flex flex-col items-center gap-1 text-xs transition-all ${
-                active ? "text-primary font-semibold" : "text-muted-foreground"
-              }`}
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center text-xs",
+                active ? "text-primary" : "text-muted-foreground"
+              )}
             >
-              <Icon className="h-5 w-5" />
-              <span>{label}</span>
+              <item.icon className="mb-0.5 h-5 w-5" />
+              {item.label}
             </Link>
           );
         })}
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center text-xs text-muted-foreground"
+        >
+          <LogOut className="mb-0.5 h-5 w-5" />
+          Logout
+        </button>
       </div>
     </nav>
   );
