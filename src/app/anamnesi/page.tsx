@@ -1,9 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/useAuth"
-import { doc, setDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore"
 
 export default function AnamnesiPage() {
   const { user } = useAuth()
@@ -18,6 +23,20 @@ export default function AnamnesiPage() {
 
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    if (!user) return
+
+    const checkAnamnesi = async () => {
+      const ref = doc(db, "users", user.uid)
+      const snap = await getDoc(ref)
+      if (snap.exists() && snap.data()?.anamnesi) {
+        window.location.href = "/dieta"
+      }
+    }
+
+    checkAnamnesi()
+  }, [user])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setAnamnesi({ ...anamnesi, [e.target.name]: e.target.value })
   }
@@ -27,15 +46,16 @@ export default function AnamnesiPage() {
     setLoading(true)
 
     const userData = {
-      ...anamnesi,
       uid: user.uid,
       email: user.email,
-      createdAt: new Date(),
+      anamnesi,
+      createdAt: serverTimestamp(),
     }
 
     try {
       await setDoc(doc(db, "users", user.uid), userData, { merge: true })
       alert("Anamnesi salvata con successo!")
+      window.location.href = "/dieta"
     } catch (error) {
       console.error("Errore salvataggio:", error)
       alert("Errore durante il salvataggio.")
@@ -56,30 +76,18 @@ export default function AnamnesiPage() {
         className="border p-2 w-full"
       />
 
-      <select
-        name="sesso"
-        onChange={handleChange}
-        className="border p-2 w-full"
-      >
+      <select name="sesso" onChange={handleChange} className="border p-2 w-full">
         <option value="">Seleziona sesso</option>
         <option value="maschio">Maschio</option>
         <option value="femmina">Femmina</option>
       </select>
 
-      <select
-        name="obiettivo"
-        onChange={handleChange}
-        className="border p-2 w-full"
-      >
+      <select name="obiettivo" onChange={handleChange} className="border p-2 w-full">
         <option value="massa">Aumento massa</option>
         <option value="dimagrimento">Dimagrimento</option>
       </select>
 
-      <select
-        name="dieta"
-        onChange={handleChange}
-        className="border p-2 w-full"
-      >
+      <select name="dieta" onChange={handleChange} className="border p-2 w-full">
         <option value="onnivora">Onnivora</option>
         <option value="vegetariana">Vegetariana</option>
         <option value="vegana">Vegana</option>

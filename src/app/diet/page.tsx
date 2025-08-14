@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/useAuth"
 import { db } from "@/lib/firebase"
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore"
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore"
 
 export default function DietaPage() {
   const { user } = useAuth()
@@ -25,16 +20,18 @@ export default function DietaPage() {
       const data = snap.data()
 
       if (data?.dieta) {
-        // Se esiste già la dieta salvata, splittala in giorni
         const giorni = data.dieta.split(/### (?=Luned\u00EC|Marted\u00EC|Mercoled\u00EC|Gioved\u00EC|Venerd\u00EC|Sabato|Domenica)/)
         setDays(giorni.map((g) => g.trim()))
         setLoading(false)
       } else {
-        // Altrimenti genera con API
+        const token = await user.getIdToken()
         const res = await fetch("/api/gpt/diet", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uid: user.uid }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({}), // l'anamnesi viene letta da Firestore
         })
 
         const json = await res.json()
@@ -49,6 +46,7 @@ export default function DietaPage() {
         } else {
           alert("Errore generazione dieta: " + json.error)
         }
+
         setLoading(false)
       }
     }
@@ -62,6 +60,7 @@ export default function DietaPage() {
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6">
       <h1 className="text-3xl font-bold text-center">La tua dieta</h1>
+
       <div className="flex justify-between">
         <button
           onClick={() => setCurrentDay((prev) => Math.max(prev - 1, 0))}
