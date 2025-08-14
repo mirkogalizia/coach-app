@@ -1,70 +1,87 @@
-"use client";
+// src/app/anamnesi/page.tsx
 
-import { useEffect, useState } from "react";
-import { auth, db } from "@/lib/firebase";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+"use client"
 
-export default function AnamnesiPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/useAuth"
+import { doc, setDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+
+export default function Anamnesi() {
+  const { user } = useAuth()
+  const router = useRouter()
+  const [form, setForm] = useState({
+    goal: "massa",
+    age: "",
+    weight: "",
+    training: "3",
+    allergies: "",
+    dislikes: "",
+  })
+  const [loading, setLoading] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+  }
 
   const handleSubmit = async () => {
-    setLoading(true);
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Utente non loggato");
-      return;
-    }
-
-    const anamnesi = {
-      obiettivo: "Perdere peso",
-      stileVita: "Sedentario",
-      preferenze: "Vegetariano",
-      allergie: ["Lattosio"],
-      note: "Nessuna nota",
-    };
+    if (!user?.uid) return
+    setLoading(true)
 
     try {
-      await setDoc(doc(db, "anamnesi", user.uid), {
-        ...anamnesi,
-        createdAt: serverTimestamp(),
-      });
-
-      const res = await fetch("/api/ai/generate-diet", {
+      // 1. Chiamata a GPT per generare preferenze dieta
+      const gptRes = await fetch("/api/gpt/diet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ anamnesi }),
-      });
+        body: JSON.stringify(form),
+      })
+      const { preferences } = await gptRes.json()
 
-      const result = await res.json();
-      console.log("🔥 Risposta API:", result);
+      // 2. Chiamata a /api/ai/diet-generate con le preferenze di GPT
+      const generateRes = await fetch("/api/ai/diet-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(preferences),
+      })
+      const diet = await generateRes.json()
 
-      if (result.ok) {
-        await setDoc(doc(db, "diete", user.uid), {
-          dieta: result.data,
-          createdAt: serverTimestamp(),
-        });
-        router.push("/diet");
-      } else {
-        console.error("Errore API:", result.error);
-        alert("Errore nella generazione della dieta");
-      }
-    } catch (error) {
-      console.error("❌ Errore submit:", error);
-      alert("Errore durante il salvataggio");
+      // 3. Salva tutto su Firebase
+      await setDoc(doc(db, "diet", user.uid), {
+        user: user.uid,
+        form,
+        preferences,
+        diet,
+        updatedAt: Date.now(),
+      })
+
+      router.push("/diet")
+    } catch (err) {
+      alert("Errore nella generazione della dieta.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <main className="max-w-xl mx-auto p-6">
-      <h1 className="text-xl font-bold mb-4">Test Generazione Dieta</h1>
-      <Button onClick={handleSubmit} disabled={loading}>
+    <div className="max-w-md mx-auto p-4 space-y-4">
+      <h1 className="text-xl font-bold">Compila la tua anamnesi</h1>
+      <input type="number" name="age" placeholder="Età" value={form.age} onChange={handleChange} />
+      <input type="number" name="weight" placeholder="Peso (kg)" value={form.weight} onChange={handleChange} />
+      <select name="goal" value={form.goal} onChange={handleChange}>
+        <option value="massa">Aumentare massa</option>
+        <option value="definizione">Definizione</option>
+      </select>
+      <select name="training" value={form.training} onChange={handleChange}>
+        <option value="2">2 allenamenti/settimana</option>
+        <option value="3">3 allenamenti/settimana</option>
+        <option value="4">4 o più</option>
+      </select>
+      <input type="text" name="allergies" placeholder="Allergie?" value={form.allergies} onChange={handleChange} />
+      <input type="text" name="dislikes" placeholder="Cibi non graditi?" value={form.dislikes} onChange={handleChange} />
+      <button className="bg-black text-white px-4 py-2" onClick={handleSubmit} disabled={loading}>
         {loading ? "Generazione in corso..." : "Genera dieta"}
-      </Button>
-    </main>
-  );
+      </button>
+    </div>
+  )
 }
