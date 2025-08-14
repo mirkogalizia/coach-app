@@ -1,3 +1,4 @@
+// src/components/AppLayout.tsx
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -11,11 +12,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <>
-      <div className="max-w-md mx-auto px-4 pt-4 pb-[120px] min-h-[100dvh]">
+    <div className="relative min-h-[100dvh] max-w-md mx-auto bg-background text-foreground flex flex-col">
+      {/* Contenuto scrollabile */}
+      <main className="flex-1 overflow-y-auto px-4 pt-4 pb-28">
         {children}
-      </div>
+      </main>
+
+      {/* BottomNav visibile solo se non in onboarding/login */}
       {!hideBottomNav && <BottomNav />}
-    </>
+    </div>
   );
 }

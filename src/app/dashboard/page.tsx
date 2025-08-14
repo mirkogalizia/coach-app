@@ -1,13 +1,12 @@
-"use client";
-
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import AppLayout from "@/components/AppLayout";
 import { WeeklyDots } from "@/components/WeeklyDots";
 import { SimpleMacros } from "@/components/SimpleMacros";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -31,63 +30,55 @@ export default function DashboardPage() {
   const streakDays = 3;
 
   return (
-    <div className="pt-6 pb-[120px] px-4 max-w-md mx-auto space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <AppLayout>
+      <div className="flex items-center justify-between mb-4">
         <div className="text-base font-semibold">Ciao 👋</div>
-        <Badge variant="secondary">
+        <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
           Streak: {streakDays} giorni
         </Badge>
       </div>
 
-      {/* Macros giornalieri */}
-      <Card className="bg-white/70 backdrop-blur-md border border-border shadow-xl">
-        <CardHeader className="pb-1">
-          <CardTitle className="text-base">I tuoi macronutrienti</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-1">
-          <SimpleMacros
-            kcal={macros.kcal}
-            target={macros.target}
-            p={macros.p}
-            c={macros.c}
-            f={macros.f}
-          />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Macronutrienti</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimpleMacros {...macros} />
+          </CardContent>
+        </Card>
 
-      {/* Piano giornaliero */}
-      <Card className="bg-white/70 backdrop-blur-md border border-border shadow-xl">
-        <CardHeader className="py-2 flex items-center justify-between">
-          <CardTitle className="text-base">Piano di oggi</CardTitle>
-          <Badge variant="outline" className="text-xs">Pranzo + Cena</Badge>
-        </CardHeader>
-        <CardContent className="py-2 text-sm space-y-1">
-          <div className="flex justify-between">
-            <span>Pranzo</span>
-            <span className="text-muted-foreground">Manzo + verdure + EVO</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Cena</span>
-            <span className="text-muted-foreground">Salmone + insalata + uova</span>
-          </div>
-        </CardContent>
-        <CardFooter className="pt-1">
-          <Button className="btn-gradient ios-rounded w-full h-9 text-sm">
-            Chiedi una modifica al coach
-          </Button>
-        </CardFooter>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Piano di oggi</CardTitle>
+            <Badge variant="outline" className="text-xs">Pranzo + Cena</Badge>
+          </CardHeader>
+          <CardContent className="text-sm space-y-1">
+            <div className="flex justify-between">
+              <span>Pranzo</span>
+              <span className="text-muted-foreground">Manzo + verdure + EVO</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Cena</span>
+              <span className="text-muted-foreground">Salmone + insalata + uova</span>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button className="btn-gradient ios-rounded w-full h-9 text-sm">
+              Chiedi una modifica al coach
+            </Button>
+          </CardFooter>
+        </Card>
 
-      {/* Progressi settimanali */}
-      <Card className="bg-white/70 backdrop-blur-md border border-border shadow-xl">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Progressi settimanali</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-2">
-          <WeeklyDots />
-        </CardContent>
-      </Card>
-    </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Progressi settimanali</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <WeeklyDots />
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
   );
 }
