@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Salad, Sparkles } from "lucide-react";
+import { Salad } from "lucide-react";
 import { ChatDock } from "@/components/chat-dock";
 import {
   Dialog,
@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { LayoutWrapper } from "@/components/LayoutWrapper";
 
 type PreviewMealItem = {
   label: string;
@@ -51,6 +52,7 @@ export default function DietPage() {
   if (!user) return null;
 
   function handleAI(_msg: string) {
+    // MOCK: simulazione risposta AI
     const mock: PreviewPayload = {
       meals: [
         {
@@ -62,9 +64,7 @@ export default function DietPage() {
         },
         {
           name: "Cena",
-          items: [
-            { label: "Salmone", grams: 200, kcal: 420, p: 40, c: 0, f: 28 },
-          ],
+          items: [{ label: "Salmone", grams: 200, kcal: 420, p: 40, c: 0, f: 28 }],
         },
       ],
       totals: { kcal: 870, p: 102, c: 3, f: 45 },
@@ -75,62 +75,59 @@ export default function DietPage() {
   }
 
   return (
-    <div className="space-y-6 pb-28">
-      {/* CARD INIZIALE */}
-      <Card className="bg-white/60 backdrop-blur-xl shadow-lg border border-border rounded-xl">
-        <CardHeader className="flex items-center gap-2">
-          <Salad className="text-primary" />
-          <CardTitle className="text-lg font-semibold">Piano alimentare</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Nessun piano impostato per oggi. Puoi chiedere al coach qui sotto.
-          </p>
-        </CardContent>
-      </Card>
+    <LayoutWrapper>
+      <div className="space-y-6">
+        <Card className="bg-white/70 backdrop-blur-md shadow-xl border-none rounded-xl">
+          <CardHeader className="flex items-center gap-2">
+            <Salad className="text-primary" />
+            <CardTitle className="text-lg font-semibold">Piano alimentare</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Nessun piano impostato per oggi. Puoi chiedere al coach qui sotto.
+            </p>
+          </CardContent>
+        </Card>
 
-      {/* PULSANTE */}
-      <Button
-        className="w-full h-10 text-sm font-medium ios-rounded btn-gradient"
-        onClick={() => handleAI("Ottimizza giornata")}
-      >
-        <Sparkles className="w-4 h-4 mr-2" />
-        Chiedi al coach
-      </Button>
+        <Button
+          className="w-full h-10 text-sm font-medium ios-rounded btn-gradient"
+          onClick={() => handleAI("Ottimizza giornata")}
+        >
+          Chiedi al coach
+        </Button>
 
-      {/* CHAT */}
-      <ChatDock context="diet" onSend={handleAI} />
+        <ChatDock context="diet" onSend={handleAI} />
 
-      {/* PREVIEW */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md bg-white/60 backdrop-blur-md border border-border rounded-xl">
-          <DialogHeader>
-            <DialogTitle>Proposta – Dieta di oggi</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 text-sm max-h-[50vh] overflow-auto">
-            {preview?.meals.map((m, i) => (
-              <div key={i}>
-                <div className="font-medium">{m.name}</div>
-                {m.items.map((it, k) => (
-                  <div key={k} className="flex justify-between">
-                    <span>{it.label} • {it.grams}g</span>
-                    <span>{Math.round(it.kcal)} kcal • P{it.p} C{it.c} F{it.f}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-            {preview && (
-              <div className="text-xs text-muted-foreground pt-2">
-                Totali: ~{preview.totals.kcal} kcal • P{preview.totals.p} C{preview.totals.c} F{preview.totals.f}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Annulla</Button>
-            <Button>Applica</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Proposta – Dieta di oggi</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 text-sm max-h-[50vh] overflow-auto">
+              {preview?.meals.map((m, i) => (
+                <div key={i}>
+                  <div className="font-medium">{m.name}</div>
+                  {m.items.map((it, k) => (
+                    <div key={k} className="flex justify-between">
+                      <span>{it.label} • {it.grams}g</span>
+                      <span>{Math.round(it.kcal)} kcal • P{it.p} C{it.c} F{it.f}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+              {preview && (
+                <div className="text-xs text-muted-foreground pt-2">
+                  Totali: ~{preview.totals.kcal} kcal • P{preview.totals.p} C{preview.totals.c} F{preview.totals.f}
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>Annulla</Button>
+              <Button>Applica</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </LayoutWrapper>
   );
 }
