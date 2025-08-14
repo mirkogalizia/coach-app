@@ -1,10 +1,10 @@
-// ✅ src/app/api/gpt/diet/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getApps, initializeApp, cert } from "firebase-admin/app";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import OpenAI from "openai";
 
+// 🔐 Inizializza Firebase Admin solo una volta
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -21,35 +21,34 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader)
+    if (!authHeader || !authHeader.startsWith("Bearer "))
       return NextResponse.json({ ok: false, error: "Token mancante" }, { status: 401 });
 
     const idToken = authHeader.split("Bearer ")[1];
-    const decodedToken = await getAuth().verifyIdToken(idToken);
-    const uid = decodedToken.uid;
+    const decoded = await getAuth().verifyIdToken(idToken);
+    const uid = decoded.uid;
 
     const { anamnesi } = await req.json();
-    console.log("📥 Anamnesi ricevuta:", anamnesi);
+    console.log("📥 Anamnesi:", anamnesi);
 
-    const prompt = `Crea una dieta settimanale dettagliata per aumento massa muscolare sulla base di questi dati: ${JSON.stringify(anamnesi)}`;
-
+    const prompt = `Crea una dieta dettagliata per aumento massa sulla base di questi dati: ${JSON.stringify(anamnesi)}`;
     const completion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
       model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
     });
 
     const dieta = completion.choices[0].message.content;
-    console.log("✅ Dieta generata:", dieta);
+    console.log("✅ Dieta:", dieta);
 
     await db.collection("users").doc(uid).collection("diets").add({
       dieta,
-      createdAt: new Date(),
       anamnesi,
+      createdAt: new Date(),
     });
 
     return NextResponse.json({ ok: true, data: dieta });
   } catch (error: any) {
-    console.error("❌ Errore API:", error);
-    return NextResponse.json({ ok: false, error: error.message || "Errore interno" }, { status: 500 });
+    console.error("❌ Errore diet:", error);
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }
