@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell } from "lucide-react";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 
 export default function WorkoutPage() {
@@ -12,9 +10,7 @@ export default function WorkoutPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/sign-in");
-    }
+    if (!loading && !user) router.replace("/sign-in");
   }, [loading, user, router]);
 
   if (loading) return <div className="text-sm text-muted-foreground">Caricamento…</div>;
@@ -22,17 +18,12 @@ export default function WorkoutPage() {
 
   return (
     <LayoutWrapper>
-      <Card className="bg-white/70 backdrop-blur-md shadow-xl border-none rounded-xl">
-        <CardHeader className="flex items-center gap-2">
-          <Dumbbell className="text-primary" />
-          <CardTitle className="text-lg font-semibold">Allenamento</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Nessun piano impostato per oggi. Puoi chiedere al coach qui sotto.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <h1 className="text-xl font-bold">Workout</h1>
+        <p className="text-sm text-muted-foreground">
+          Nessun piano di allenamento impostato. Chiedi al coach.
+        </p>
+      </div>
     </LayoutWrapper>
   );
 }
