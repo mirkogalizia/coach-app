@@ -23,7 +23,7 @@ export default function DashboardPage() {
     if (!loading && !user) router.replace("/sign-in");
   }, [loading, user, router]);
 
-  if (loading) return <div className="text-sm text-muted-foreground">Caricamento…</div>;
+  if (loading) return <div className="text-sm text-muted-foreground p-4">Caricamento…</div>;
   if (!user) return null;
 
   const [macros] = useState({
@@ -37,15 +37,15 @@ export default function DashboardPage() {
   const streakDays = 3;
 
   return (
-    <div className="mx-auto max-w-md px-3 pt-4 pb-28 space-y-4">
+    <div className="max-w-md mx-auto w-full px-4 pt-4 pb-[120px] space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="text-base font-semibold">Ciao 👋</div>
-        <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
-          Streak: {streakDays} giorni
-        </Badge>
+        <h1 className="text-lg font-semibold">Ciao 👋</h1>
+        <Badge className="bg-emerald-600 text-white text-xs">Streak: {streakDays} giorni</Badge>
       </div>
 
-      <GlassCard className="shrink-0">
+      {/* Macros giornalieri */}
+      <GlassCard>
         <CardHeader className="pb-1">
           <CardTitle className="text-base">I tuoi macronutrienti</CardTitle>
         </CardHeader>
@@ -60,6 +60,7 @@ export default function DashboardPage() {
         </CardContent>
       </GlassCard>
 
+      {/* Piano giornaliero */}
       <GlassCard>
         <CardHeader className="py-2 flex items-center justify-between">
           <CardTitle className="text-base">Piano di oggi</CardTitle>
@@ -82,7 +83,8 @@ export default function DashboardPage() {
         </CardFooter>
       </GlassCard>
 
-      <GlassCard className="min-h-0">
+      {/* Progressi settimanali */}
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Progressi settimanali</CardTitle>
         </CardHeader>
@@ -90,6 +92,9 @@ export default function DashboardPage() {
           <WeeklyDots />
         </CardContent>
       </GlassCard>
+
+      {/* Spacer finale per non far coprire nulla dalla BottomNav */}
+      <div className="h-[40px]" />
     </div>
   );
 }
