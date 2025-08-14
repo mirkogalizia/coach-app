@@ -1,43 +1,35 @@
-"use client"
+// src/components/BottomNav.tsx
+"use client";
 
-import { usePathname } from "next/navigation"
-import { Dumbbell, Home, LogOut, Salad } from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "@/components/AuthProvider"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Dumbbell, Salad, Home, LogOut } from "lucide-react";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+
+const navItems = [
+  { href: "/dashboard", icon: Home },
+  { href: "/diet", icon: Salad },
+  { href: "/workout", icon: Dumbbell },
+];
 
 export function BottomNav() {
-  const pathname = usePathname()
-  const { user, loading } = useAuth()
-
-  // Se loading o utente non loggato, non mostrare nulla
-  if (loading || !user) return null
+  const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-white/80 backdrop-blur-md border-t z-50">
-      <div className="flex justify-around max-w-md mx-auto px-3 py-2 text-sm">
-        <Link href="/dashboard" className={`flex flex-col items-center ${pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"}`}>
-          <Home className="size-5" />
-          Home
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-t px-6 py-3 flex justify-between items-center max-w-md mx-auto">
+      {navItems.map(({ href, icon: Icon }) => (
+        <Link key={href} href={href}>
+          <Icon
+            className={`size-6 ${
+              pathname === href ? "text-primary" : "text-muted-foreground"
+            }`}
+          />
         </Link>
-        <Link href="/diet" className={`flex flex-col items-center ${pathname === "/diet" ? "text-primary" : "text-muted-foreground"}`}>
-          <Salad className="size-5" />
-          Dieta
-        </Link>
-        <Link href="/workout" className={`flex flex-col items-center ${pathname === "/workout" ? "text-primary" : "text-muted-foreground"}`}>
-          <Dumbbell className="size-5" />
-          Allenamento
-        </Link>
-        <button
-          onClick={() => {
-            localStorage.clear()
-            window.location.href = "/sign-in"
-          }}
-          className="flex flex-col items-center text-muted-foreground"
-        >
-          <LogOut className="size-5" />
-          Esci
-        </button>
-      </div>
+      ))}
+      <button onClick={() => signOut(auth)} title="Logout">
+        <LogOut className="size-6 text-muted-foreground" />
+      </button>
     </nav>
-  )
+  );
 }

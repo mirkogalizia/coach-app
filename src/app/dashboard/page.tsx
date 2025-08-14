@@ -1,6 +1,7 @@
+// src/app/dashboard/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { WeeklyDots } from "@/components/WeeklyDots";
@@ -23,50 +24,39 @@ export default function DashboardPage() {
     if (!loading && !user) router.replace("/sign-in");
   }, [loading, user, router]);
 
-  if (loading) return <div className="text-sm text-muted-foreground p-4">Caricamento…</div>;
+  if (loading) return <div className="text-sm text-muted-foreground">Caricamento…</div>;
   if (!user) return null;
 
-  const [macros] = useState({
+  const macros = {
     kcal: 1240,
     target: 2100,
     p: 92,
     c: 28,
     f: 76,
-  });
-
-  const streakDays = 3;
+  };
 
   return (
-    <div className="max-w-md mx-auto w-full px-4 pt-4 pb-[120px] space-y-5">
-      {/* Header */}
+    <div className="space-y-4 pb-32">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Ciao 👋</h1>
-        <Badge className="bg-emerald-600 text-white text-xs">Streak: {streakDays} giorni</Badge>
+        <div className="text-base font-semibold">Ciao 👋</div>
+        <Badge variant="secondary">Streak: 3 giorni</Badge>
       </div>
 
-      {/* Macros giornalieri */}
       <GlassCard>
         <CardHeader className="pb-1">
-          <CardTitle className="text-base">I tuoi macronutrienti</CardTitle>
+          <CardTitle className="text-base">Macronutrienti</CardTitle>
         </CardHeader>
         <CardContent className="pt-1">
-          <SimpleMacros
-            kcal={macros.kcal}
-            target={macros.target}
-            p={macros.p}
-            c={macros.c}
-            f={macros.f}
-          />
+          <SimpleMacros {...macros} />
         </CardContent>
       </GlassCard>
 
-      {/* Piano giornaliero */}
       <GlassCard>
-        <CardHeader className="py-2 flex items-center justify-between">
+        <CardHeader className="py-2 flex justify-between items-center">
           <CardTitle className="text-base">Piano di oggi</CardTitle>
           <Badge variant="outline" className="text-xs">Pranzo + Cena</Badge>
         </CardHeader>
-        <CardContent className="py-2 text-sm space-y-1">
+        <CardContent className="space-y-1 text-sm">
           <div className="flex justify-between">
             <span>Pranzo</span>
             <span className="text-muted-foreground">Manzo + verdure + EVO</span>
@@ -76,25 +66,21 @@ export default function DashboardPage() {
             <span className="text-muted-foreground">Salmone + insalata + uova</span>
           </div>
         </CardContent>
-        <CardFooter className="pt-1">
-          <Button className="btn-gradient ios-rounded w-full h-9 text-sm">
+        <CardFooter className="pt-2">
+          <Button className="w-full btn-gradient ios-rounded text-sm h-9">
             Chiedi una modifica al coach
           </Button>
         </CardFooter>
       </GlassCard>
 
-      {/* Progressi settimanali */}
       <GlassCard>
-        <CardHeader className="pb-2">
+        <CardHeader>
           <CardTitle className="text-base">Progressi settimanali</CardTitle>
         </CardHeader>
-        <CardContent className="pb-2">
+        <CardContent>
           <WeeklyDots />
         </CardContent>
       </GlassCard>
-
-      {/* Spacer finale per non far coprire nulla dalla BottomNav */}
-      <div className="h-[40px]" />
     </div>
   );
 }
