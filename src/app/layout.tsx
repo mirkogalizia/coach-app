@@ -2,10 +2,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/AuthProvider";
-import dynamic from "next/dynamic";
-
-// ⬇️ IMPORT DINAMICO (evita errore a build time su server)
-const LayoutWrapper = dynamic(() => import("@/components/LayoutWrapper"), { ssr: false });
+import { ClientOnlyBottomNav } from "@/components/ClientOnlyBottomNav";
 
 export const metadata: Metadata = {
   title: "Coach",
@@ -17,9 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="it" suppressHydrationWarning>
       <body className="min-h-[100dvh] bg-background text-foreground relative">
         <AuthProvider>
-          <LayoutWrapper>
+          <div className="max-w-md mx-auto px-3 pt-3 pb-[120px]">
             {children}
-          </LayoutWrapper>
+          </div>
+          <ClientOnlyBottomNav />
         </AuthProvider>
       </body>
     </html>
