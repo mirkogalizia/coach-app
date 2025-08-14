@@ -62,27 +62,31 @@ export default function DashboardPage() {
       </Card>
 
       {/* PIANO DI OGGI */}
-      <Card className="glass-strong ios-rounded">
-        <CardHeader>
-          <CardTitle className="text-base">Piano di oggi</CardTitle>
-          <Badge variant="outline" className="text-xs">Pranzo + Cena</Badge>
-        </CardHeader>
-        <CardContent className="text-sm space-y-1">
-          <div className="flex justify-between">
-            <span>Pranzo</span>
-            <span className="text-muted-foreground">Manzo + verdure + EVO</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Cena</span>
-            <span className="text-muted-foreground">Salmone + insalata + uova</span>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button className="btn-gradient ios-rounded w-full h-9 text-sm">
-            Chiedi una modifica al coach
-          </Button>
-        </CardFooter>
-      </Card>
+<Card className="glass-strong ios-rounded">
+  <CardHeader>
+    <div className="flex items-center justify-between">
+      <CardTitle className="text-base">Piano di oggi</CardTitle>
+      <Badge variant="outline" className="text-xs">Pranzo + Cena</Badge>
+    </div>
+  </CardHeader>
+
+  <CardContent className="text-sm space-y-2">
+    <div className="flex justify-between items-start">
+      <span className="text-foreground font-medium">Pranzo</span>
+      <span className="text-muted-foreground text-right max-w-[60%]">Manzo + verdure + EVO</span>
+    </div>
+    <div className="flex justify-between items-start">
+      <span className="text-foreground font-medium">Cena</span>
+      <span className="text-muted-foreground text-right max-w-[60%]">Salmone + insalata + uova</span>
+    </div>
+  </CardContent>
+
+  <CardFooter>
+    <Button variant="default" className="ios-rounded w-full h-9 text-sm">
+      Chiedi una modifica al coach
+    </Button>
+  </CardFooter>
+</Card>
 
       {/* PROGRESSI */}
       <Card className="glass-strong ios-rounded">
